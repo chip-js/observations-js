@@ -1,0 +1,38 @@
+{
+  "name": "observations-js",
+  "version": "0.1.0",
+  "description": "Observes simplified JavaScript expressions and triggers callbacks when the returned value changes.",
+  "keywords": [
+    "templates",
+    "data-binding",
+    "javascript"
+  ],
+  "homepage": "http://github.com/chip-js/observations-js",
+  "author": {
+    "name": "Jacob Wright",
+    "email": "jacwright@gmail.com",
+    "url": "http://github.com/jacwright"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chip-js/observations-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chip-js/observations-js/issues"
+  },
+  "licenses": {
+    "type": "MIT",
+    "url": "git://github.com/chip-js/observations-js/LICENSE"
+  },
+  "scripts": {
+    "test": "mocha test"
+  },
+  "dependencies": {
+    "differences-js": "^0.1.0",
+    "expressions-js": "^0.1.0"
+  },
+  "devDependencies": {
+    "chai": "^3.4.1",
+    "mocha": "^2.3.3"
+  }
+}
