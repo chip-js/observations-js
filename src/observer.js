@@ -1,8 +1,6 @@
 module.exports = Observer;
 var expressions = require('expressions-js');
 var diff = require('differences-js');
-var requestAnimationFrame = global.requestAnimationFrame || setTimeout;
-var cancelAnimationFrame = global.cancelAnimationFrame || clearTimeout;
 
 // # Observer
 
@@ -11,14 +9,16 @@ var cancelAnimationFrame = global.cancelAnimationFrame || clearTimeout;
 //
 // If the old and new values were either an array or an object, the `callback` also
 // receives an array of splices (for an array), or an array of change objects (for an object) which are the same
-// format that `Array.observe` and `Object.observe` return <http://wiki.ecmascript.org/doku.php?id=harmony:observe>.
-function Observer(expr, callback, callbackContext) {
+// format that `Array.observe` and `Object.observe` return
+// <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/observe>.
+function Observer(observations, expr, callback, callbackContext) {
   if (typeof expr === 'function') {
     this.getter = expr;
     this.setter = expr;
   } else {
-    this.getter = expressions.parse(expr, Observer.globals, Observer.formatters);
+    this.getter = expressions.parse(expr, observations.globals, observations.formatters);
   }
+  this.observations = observations;
   this.expr = expr;
   this.callback = callback;
   this.callbackContext = callbackContext;
@@ -34,13 +34,13 @@ Observer.prototype = {
   bind: function(context, skipUpdate) {
     this.context = context;
     if (this.callback) {
-      Observer.add(this, skipUpdate);
+      this.observations.add(this, skipUpdate);
     }
   },
 
   // Unbinds this expression
   unbind: function() {
-    Observer.remove(this);
+    this.observations.remove(this);
     this.context = null;
   },
 
@@ -65,7 +65,7 @@ Observer.prototype = {
     if (!this.setter) {
       try {
         this.setter = typeof this.expr === 'string'
-          ? expressions.parseSetter(this.expr, Observer.globals, Observer.formatters)
+          ? expressions.parseSetter(this.expr, this.observations.globals, this.observations.formatters)
           : false;
       } catch (e) {
         this.setter = false;
@@ -82,7 +82,7 @@ Observer.prototype = {
     // We can't expect code in fragments outside Observer to be aware of "sync" since observer can be replaced by other
     // types (e.g. one without a `sync()` method, such as one that uses `Object.observe`) in other systems.
     this.sync();
-    Observer.sync();
+    this.observations.sync();
     return result;
   },
 
@@ -120,132 +120,5 @@ Observer.prototype = {
     } else {
       this.oldValue = value;
     }
-  }
-};
-
-
-// An array of all observers, considered *private*
-Observer.observers = [];
-
-// An array of callbacks to run after the next sync, considered *private*
-Observer.callbacks = [];
-Observer.listeners = [];
-
-// Adds a new observer to be synced with changes. If `skipUpdate` is true then the callback will only be called when a
-// change is made, not initially.
-Observer.add = function(observer, skipUpdate) {
-  this.observers.push(observer);
-  if (!skipUpdate) {
-    observer.forceUpdateNextSync = true;
-    observer.sync();
-  }
-};
-
-// Removes an observer, stopping it from being run
-Observer.remove = function(observer) {
-  var index = this.observers.indexOf(observer);
-  if (index !== -1) {
-    this.observers.splice(index, 1);
-    return true;
-  } else {
-    return false;
-  }
-};
-
-// *private* properties used in the sync cycle
-Observer.syncing = false;
-Observer.callbacksRunning = false;
-Observer.rerun = false;
-Observer.cycles = 0;
-Observer.max = 10;
-Observer.timeout = null;
-Observer.syncPending = null;
-
-// Schedules an observer sync cycle which checks all the observers to see if they've changed.
-Observer.sync = function(callback) {
-  if (Observer.syncPending) return false;
-  Observer.syncPending = requestAnimationFrame(function() {
-    Observer.syncNow(callback);
-  });
-  return true;
-};
-
-// Runs the observer sync cycle which checks all the observers to see if they've changed.
-Observer.syncNow = function(callback) {
-  if (typeof callback === 'function') {
-    Observer.afterSync(callback);
-  }
-
-  cancelAnimationFrame(Observer.syncPending);
-  Observer.syncPending = null;
-
-  if (Observer.syncing) {
-    Observer.rerun = true;
-    return false;
-  }
-
-  Observer.syncing = true;
-  Observer.rerun = true;
-  Observer.cycles = 0;
-
-  var i, l;
-
-  // Allow callbacks to run the sync cycle again immediately, but stop at `Observer.max` (default 10) cycles to we don't
-  // run infinite loops
-  while (Observer.rerun) {
-    if (++Observer.cycles === Observer.max) {
-      throw new Error('Infinite observer syncing, an observer is calling Observer.sync() too many times');
-    }
-    Observer.rerun = false;
-    // the observer array may increase or decrease in size (remaining observers) during the sync
-    for (i = 0; i < Observer.observers.length; i++) {
-      Observer.observers[i].sync();
-    }
-  }
-
-  Observer.callbacksRunning = true;
-
-  var callbacks = Observer.callbacks;
-  Observer.callbacks = [];
-  while (callbacks.length) {
-    callbacks.shift()();
-  }
-
-  for (i = 0, l = Observer.listeners.length; i < l; i++) {
-    var listener = Observer.listeners[i];
-    listener();
-  }
-
-  Observer.callbacksRunning = false;
-  Observer.syncing = false;
-  Observer.cycles = 0;
-  return true;
-};
-
-// After the next sync (or the current if in the middle of one), run the provided callback
-Observer.afterSync = function(callback) {
-  if (typeof callback !== 'function') {
-    throw new TypeError('callback must be a function');
-  }
-  if (Observer.callbacksRunning) {
-    Observer.sync();
-  }
-  Observer.callbacks.push(callback);
-};
-
-Observer.onSync = function(listener) {
-  if (typeof listener !== 'function') {
-    throw new TypeError('listener must be a function');
-  }
-  Observer.listeners.push(listener);
-};
-
-Observer.removeOnSync = function(listener) {
-  if (typeof listener !== 'function') {
-    throw new TypeError('listener must be a function');
-  }
-  var index = Observer.listeners.indexOf(listener);
-  if (index !== -1) {
-    Observer.listeners.splice(index, 1).pop();
   }
 };

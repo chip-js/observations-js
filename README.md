@@ -14,6 +14,45 @@ To install Observations.js you can use npm.
 npm install observations-js
 ```
 
+To use observations:
+
+```
+var Observations = require('observations-js');
+var observations = new Observations();
+
+var observer = observations.createObserver('name', function(value) {
+  console.log('Name is', value);
+});
+
+var person = { name: 'Bob' };
+observer.bind(person);
+// logged "Name is Bob"
+
+person.name = 'Fred';
+
+observations.syncNow();
+// logged "Name is Fred"
+```
+
+### API
+
+#### Observations
+
+ * `observations.createObserver(expr, callback, [callbackContext])`
+ * `observations.sync([callback])`
+ * `observations.syncNow([callback])`
+ * `observations.afterSync(callback)`
+ * `observations.onSync(callback)`
+ * `observations.removeOnSync(callback)`
+
+#### Observer
+
+ * `observer.bind(context)`
+ * `observer.unbind()`
+ * `observer.get()`
+ * `observer.set(value)`
+ * `observer.skipNextSync()`
+ * `observer.close()`
 
 
 ## Contributions and Issues

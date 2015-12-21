@@ -1,1 +1,1 @@
-module.exports = require('./src/observer');
+module.exports = require('./src/observations');
