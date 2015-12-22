@@ -57,6 +57,12 @@ Observations.prototype.syncNow = function(callback) {
     return false;
   }
 
+  this.runSync();
+  return true;
+};
+
+
+Observations.prototype.runSync = function() {
   this.syncing = true;
   this.rerun = true;
   this.cycles = 0;
@@ -92,7 +98,6 @@ Observations.prototype.syncNow = function(callback) {
   this.callbacksRunning = false;
   this.syncing = false;
   this.cycles = 0;
-  return true;
 };
 
 

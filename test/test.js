@@ -1,5 +1,5 @@
 var expect = require('chai').expect;
-var Observations = require('../index');
+var Observations = require('../index').Observations;
 var Observer = require('../src/observer');
 
 global.log = function() {
