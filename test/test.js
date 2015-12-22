@@ -22,8 +22,8 @@ describe('Observations.js', function() {
       observations = new Observations();
       called = 0;
       lastValue = [];
-      obj = {};
-      observer = new Observer(observations, 'foo', callback);
+      obj = { name: 'test', age: 100 };
+      observer = new Observer(observations, 'name', callback);
     });
 
 
@@ -32,40 +32,144 @@ describe('Observations.js', function() {
       expect(called).to.equal(1);
     });
 
+
+    it('should not call the callback initially when skip requested', function() {
+      observer.bind(obj, true);
+      expect(called).to.equal(0);
+    });
+
+
     it('should call callback when changed', function() {
       observer.bind(obj);
       expect(called).to.equal(1);
-      expect(lastValue).to.equal(undefined);
-      obj.foo = 'bar';
+      expect(lastValue).to.equal('test');
+      obj.name = 'bar';
       expect(called).to.equal(1);
       observations.syncNow();
       expect(called).to.equal(2);
       expect(lastValue).to.equal('bar');
     });
 
+
+    it('should not call the callback if another value changed', function() {
+      observer.bind(obj);
+      expect(called).to.equal(1);
+
+      obj.age = 50;
+      observations.syncNow();
+      expect(called).to.equal(1);
+    });
+
+
     it('should not call callback after being unbound', function() {
       observer.bind(obj);
       expect(called).to.equal(1);
       observer.unbind(obj);
-      obj.foo = 'bar';
+      obj.name = 'bar';
       observations.syncNow();
       expect(called).to.equal(1);
-      expect(lastValue).to.equal(undefined);
+      expect(lastValue).to.equal('test');
     });
 
 
-    // TODO add more tests
+    it('should not call the callback if requested to skip the next sync', function() {
+      observer.bind(obj);
+      expect(called).to.equal(1);
+
+      observer.skipNextSync();
+      obj.name = 'test2';
+
+      observations.syncNow();
+      expect(called).to.equal(1);
+
+      observations.syncNow();
+      expect(called).to.equal(1);
+
+      obj.name = 'test3';
+      observations.syncNow();
+      expect(called).to.equal(2);
+    });
+
+
+    it('should be able to get the value', function() {
+      observer.bind(obj);
+      expect(observer.get()).to.equal(obj.name);
+    });
+
+
+    it('should be able to set the value', function() {
+      observer.bind(obj);
+      observer.set('test2');
+      expect(obj.name).to.equal('test2');
+      expect(called).to.equal(2);
+
+      observations.syncNow();
+      expect(called).to.equal(2);
+    });
+
   });
 
 
   describe('Observation', function() {
+    var observations;
 
-    it('should create a new observations object', function() {
-      var observations = new Observations();
-      expect(observations instanceof Observations).to.be.true;
+    beforeEach('should create a new observations object', function() {
+      observations = new Observations();
     });
 
-    // TODO add more tests
+
+    it('should call listeners on every sync', function() {
+      var called = 0;
+      observations.onSync(function() {
+        called++;
+      });
+
+      expect(called).to.equal(0);
+
+      observations.syncNow();
+      expect(called).to.equal(1);
+      observations.syncNow();
+      expect(called).to.equal(2);
+    });
+
+
+    it('should stop callling removed listeners', function() {
+      var called = 0, callback = function() {
+        called++;
+      };
+      observations.onSync(callback);
+
+      expect(called).to.equal(0);
+
+      observations.syncNow();
+      expect(called).to.equal(1);
+
+      observations.offSync(callback);
+
+      observations.syncNow();
+      expect(called).to.equal(1);
+    });
+
+
+    it('should fire callbacks after next sync', function() {
+      var called = 0, callback = function() {
+        called++;
+      };
+
+      expect(called).to.equal(0);
+
+      observations.afterSync(callback);
+
+      observations.syncNow();
+      expect(called).to.equal(1);
+
+      observations.syncNow();
+      expect(called).to.equal(1);
+
+      observations.syncNow(callback);
+      expect(called).to.equal(2);
+
+    });
 
   });
 
