@@ -1,4 +1,5 @@
 module.exports = Observer;
+var Class = require('chip-utils/class');
 var expressions = require('expressions-js');
 var diff = require('differences-js');
 
@@ -28,7 +29,7 @@ function Observer(observations, expr, callback, callbackContext) {
   this.oldValue = undefined;
 }
 
-Observer.prototype = {
+Class.extend(Observer, {
 
   // Binds this expression to a given context
   bind: function(context, skipUpdate) {
@@ -121,4 +122,4 @@ Observer.prototype = {
       this.oldValue = value;
     }
   }
-};
+});
