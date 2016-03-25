@@ -40,7 +40,7 @@ observations.syncNow();
  * `observations.createObserver(expr, callback, [callbackContext])`
    - Registers a new observer and callback.
  * `observations.sync([callback])`
-   - Diffs observed objects, calling the registed callback on changed objects on the next sync cycle.
+   - Diffs observed objects, calling the registered callback on changed objects on the next sync cycle.
  * `observations.syncNow([callback])`
    - Explicitly runs the sync cycle on-demand.
  * `observations.afterSync(callback)`
