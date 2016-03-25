@@ -49,8 +49,6 @@ observations.syncNow();
    - Adds a listener that gets run during `sync()`.
  * `observations.offSync(listener)`
    - Removes an `onSync` listener.
- * `observations.removeOnSync(callback)`
-   - Removes `onSync` listener.
 
 #### Observer
 
