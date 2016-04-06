@@ -103,10 +103,27 @@ Class.extend(Observer, {
       this.skip = false;
     } else {
       var change;
+      var useCompareBy = this.getChangeRecords &&
+                         this.compareBy &&
+                         Array.isArray(value) &&
+                         Array.isArray(this.oldValue);
 
-      if (this.getChangeRecords && this.compareBy && Array.isArray(value) && Array.isArray(this.oldValue)) {
-        var map = mapToProperty(this.compareBy);
-        changed = diff.values(value.map(map), this.oldValue.map(map));
+      if (useCompareBy) {
+        var expr = this.compareBy;
+        var name = this.compareByName;
+        var index = this.compareByIndex || '__index__';
+        var ctx = this.context;
+        var globals = this.observations.globals;
+        var formatters = this.observations.formatters;
+        var oldValue = this.oldValue;
+        if (!name) {
+          name = '__item__';
+          // Turn "id" into "__item__.id"
+          expr = name + '.' + expr;
+        }
+
+        var getCompareValue = expressions.parse(expr, globals, formatters, name, index);
+        changed = diff.values(value.map(getCompareValue, ctx), oldValue.map(getCompareValue, ctx));
       } else {
         changed = diff.values(value, this.oldValue);
       }

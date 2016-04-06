@@ -129,6 +129,46 @@ describe('Observations.js', function() {
       expect(called).to.equal(2);
     });
 
+
+    it('should support compareByName & index', function() {
+      var highestIndex = -1;
+      var calledId = 0;
+      var getGetId = function(id) {
+        return function(idx) {
+          calledId++;
+          highestIndex = Math.max(idx, highestIndex);
+          return id;
+        };
+      };
+
+      var obj = { children: [{ getId: getGetId(1), name: 'Bob' }]};
+
+      observer = new Observer(observations, 'children', callback);
+      observer.getChangeRecords = true;
+      observer.compareBy = 'item.getId(index)';
+      observer.compareByName = 'item';
+      observer.compareByIndex = 'index';
+      observer.bind(obj);
+
+      expect(lastChanges).to.be.undefined;
+      expect(called).to.equal(1);
+
+      obj.children = [{ getId: getGetId(1), name: 'Bobby' }];
+      observations.syncNow();
+      expect(called).to.equal(1);
+      expect(calledId).to.equal(2);
+      expect(highestIndex).to.equal(0);
+
+      obj.children = [{ getId: getGetId(2), name: 'Bobby' }];
+      observations.syncNow();
+      expect(called).to.equal(2);
+
+      obj.children = [{ getId: getGetId(1), name: 'Bob' }, { getId: getGetId(2), name: 'Bobby' }];
+      observations.syncNow();
+      expect(called).to.equal(3);
+      expect(highestIndex).to.equal(1);
+    });
+
   });
 
 
