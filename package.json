@@ -27,7 +27,7 @@
   "dependencies": {
     "chip-utils": "^0.2.2",
     "differences-js": "^0.1.0",
-    "expressions-js": "^0.1.1"
+    "expressions-js": "^0.1.4"
   },
   "devDependencies": {
     "chai": "^3.4.1",
