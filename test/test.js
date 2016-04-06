@@ -13,15 +13,17 @@ global.log = function() {
 describe('Observations.js', function() {
 
   describe('Observer', function() {
-    var observations, observer, obj, called, lastValue, callback = function(value) {
+    var observations, observer, obj, called, lastValue, lastChanges, callback = function(value, old, changes) {
       called++;
       lastValue = value;
+      lastChanges = changes;
     };
 
     beforeEach(function() {
       observations = new Observations();
       called = 0;
       lastValue = [];
+      lastChanges = undefined;
       obj = { name: 'test', age: 100 };
       observer = new Observer(observations, 'name', callback);
     });
@@ -103,6 +105,26 @@ describe('Observations.js', function() {
       expect(obj.name).to.equal('test2');
       expect(called).to.equal(2);
 
+      observations.syncNow();
+      expect(called).to.equal(2);
+    });
+
+
+    it('should support compareBy', function() {
+      var obj = { children: [{ id: 1, name: 'Bob' }]};
+      observer = new Observer(observations, 'children', callback);
+      observer.getChangeRecords = true;
+      observer.compareBy = 'id';
+      observer.bind(obj);
+
+      expect(lastChanges).to.be.undefined;
+      expect(called).to.equal(1);
+
+      obj.children = [{ id: 1, name: 'Bobby' }];
+      observations.syncNow();
+      expect(called).to.equal(1);
+
+      obj.children = [{ id: 2, name: 'Bobby' }];
       observations.syncNow();
       expect(called).to.equal(2);
     });
