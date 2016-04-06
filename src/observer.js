@@ -102,8 +102,17 @@ Class.extend(Observer, {
     if (this.skip || !this.callback) {
       this.skip = false;
     } else {
-      // If an array has changed calculate the splices and call the callback. This
-      var changed = diff.values(value, this.oldValue);
+      var change;
+
+      if (this.getChangeRecords && this.compareBy && Array.isArray(value) && Array.isArray(this.oldValue)) {
+        var map = mapToProperty(this.compareBy);
+        changed = diff.values(value.map(map), this.oldValue.map(map));
+      } else {
+        changed = diff.values(value, this.oldValue);
+      }
+
+
+      // If an array has changed calculate the splices and call the callback.
       if (!changed && !this.forceUpdateNextSync) return;
       this.forceUpdateNextSync = false;
       if (Array.isArray(changed)) {
@@ -123,3 +132,9 @@ Class.extend(Observer, {
     }
   }
 });
+
+function mapToProperty(property) {
+  return function(item) {
+    return item && item[property];
+  }
+}
