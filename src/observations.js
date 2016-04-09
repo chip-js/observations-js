@@ -1,6 +1,7 @@
 module.exports = Observations;
 var Class = require('chip-utils/class');
 var Observer = require('./observer');
+var computed = require('./computed');
 var requestAnimationFrame = global.requestAnimationFrame || setTimeout;
 var cancelAnimationFrame = global.cancelAnimationFrame || clearTimeout;
 
@@ -19,6 +20,7 @@ function Observations() {
   this.timeout = null;
   this.pendingSync = null;
   this.syncNow = this.syncNow.bind(this);
+  this.computed = computed.create(this);
 }
 
 
@@ -26,8 +28,53 @@ Class.extend(Observations, {
 
   // Creates a new observer attached to this observations object. When the observer is bound to a context it will be added
   // to this `observations` and synced when this `observations.sync` is called.
-  createObserver: function(expr, callback, callbackContext) {
-    return new Observer(this, expr, callback, callbackContext);
+  createObserver: function(expression, callback, callbackContext) {
+    return new Observer(this, expression, callback, callbackContext);
+  },
+
+  /**
+   * Observe an expression and trigger `onAdd` and `onRemove` whenever a member is added/removed from the array or object.
+   * @param {Function} onAdd The function which will be called when a member is added to the source
+   * @param {Function} onRemove The function which will be called when a member is removed from the source
+   * @return {Observer} The observer for observing the source. Bind against a source object.
+   */
+  observeMembers: function(expression, onAdd, onRemove, callbackContext) {
+    if (!onAdd) onAdd = function(){};
+    if (!onRemove) onRemove = function(){};
+
+    var observer = this.createObserver(expression, function(source, oldValue, changes) {
+      if (changes) {
+        changes.forEach(function(change) {
+          if (change.removed) {
+            change.removed.forEach(onRemove, callbackContext);
+            source.slice(change.index, change.index + change.addedCount).forEach(onAdd, callbackContext);
+          } else if (change.type === 'add') {
+            onAdd.call(callbackContext, source[change.name]);
+          } else if (change.type === 'update') {
+            onRemove.call(callbackContext, change.oldValue);
+            onAdd.call(callbackContext, source[change.name]);
+          } else if (change.type === 'delete') {
+            onRemove.call(callbackContext, change.oldValue);
+          }
+        });
+      } else if (Array.isArray(source)) {
+        source.forEach(onAdd, callbackContext);
+      } else if (source && typeof source === 'object') {
+        Object.keys(source).forEach(function(key) {
+          onAdd.call(callbackContext, source[key]);
+        });
+      } else if (Array.isArray(oldValue)) {
+        oldValue.forEach(onRemove, callbackContext);
+      } else if (oldValue && typeof oldValue === 'object') {
+        // If undefined (or something that isn't an array/object) remove the observers
+        Object.keys(oldValue).forEach(function(key) {
+          onRemove.call(callbackContext, oldValue[key]);
+        });
+      }
+    });
+
+    observer.getChangeRecords = true;
+    return observer;
   },
 
 

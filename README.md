@@ -37,8 +37,15 @@ observations.syncNow();
 
 #### Observations
 
- * `observations.createObserver(expr, callback, [callbackContext])`
+ * `observations.createObserver(expression, callback, [callbackContext])`
    - Registers a new observer and callback.
+ * `observations.observeMembers(expression, addedCallback, removedCallback, [callbackContext])`
+   - Registers a new observer and calls the added callback whenever a member (of an array or object) is added and calls
+     removed callback whenever a member is removed. Use `obj.computedObservers.enable()` or `disable()` to turn on/off.
+ * `observations.computed(expressionMap)`
+   - Creates an object which keeps the results of the computed expression map in sync
+ * `observations.computed.extend(obj, expressionMap)`
+   - Extends an existing object with the results of the computed expression map
  * `observations.sync([callback])`
    - Diffs observed objects, calling the registered callback on changed objects on the next sync cycle.
  * `observations.syncNow([callback])`
