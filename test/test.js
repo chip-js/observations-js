@@ -172,7 +172,7 @@ describe('Observations.js', function() {
   });
 
 
-  describe('Observation', function() {
+  describe('Observations', function() {
     var observations;
 
     beforeEach('should create a new observations object', function() {
@@ -233,8 +233,178 @@ describe('Observations.js', function() {
 
     });
 
+
+    it('should observe members of an array', function() {
+      var lastAdd, addCalled = 0, addCallback = function(member) {
+        lastAdd = member;
+        addCalled++;
+      };
+      var lastRemove, removeCalled = 0, removeCallback = function(member) {
+        lastRemove = member;
+        removeCalled++;
+      };
+
+      var observer = observations.observeMembers('array', addCallback, removeCallback);
+      var obj = { array: [ 'foo' ] };
+      observer.bind(obj);
+
+      expect(addCalled).to.equal(1);
+      expect(lastAdd).to.equal('foo');
+      expect(removeCalled).to.equal(0);
+
+      obj.array = [ 'foo' ];
+      observations.syncNow();
+
+      expect(addCalled).to.equal(1);
+      expect(removeCalled).to.equal(0);
+
+      obj.array = [ 'foo', 'bar' ];
+      observations.syncNow();
+
+      expect(addCalled).to.equal(2);
+      expect(lastAdd).to.equal('bar');
+      expect(removeCalled).to.equal(0);
+
+      obj.array = [ 'test' ];
+      observations.syncNow();
+
+      expect(addCalled).to.equal(3);
+      expect(lastAdd).to.equal('test');
+      expect(removeCalled).to.equal(2);
+      expect(lastRemove).to.equal('bar');
+
+      obj.array = [];
+      observations.syncNow();
+
+      expect(addCalled).to.equal(3);
+      expect(removeCalled).to.equal(3);
+      expect(lastRemove).to.equal('test');
+
+    });
+
+
+    it('should observe members of an object', function() {
+      var lastAdd, addCalled = 0, addCallback = function(member) {
+        lastAdd = member;
+        addCalled++;
+      };
+      var lastRemove, removeCalled = 0, removeCallback = function(member) {
+        lastRemove = member;
+        removeCalled++;
+      };
+
+      var observer = observations.observeMembers('object', addCallback, removeCallback);
+      var obj = { object: { foo: 'foo' } };
+      observer.bind(obj);
+
+      expect(addCalled).to.equal(1);
+      expect(lastAdd).to.equal('foo');
+      expect(removeCalled).to.equal(0);
+
+      obj.object = { foo: 'foo' };
+      observations.syncNow();
+
+      expect(addCalled).to.equal(1);
+      expect(removeCalled).to.equal(0);
+
+      obj.object = { foo: 'foo', bar: '~bar~' };
+      observations.syncNow();
+
+      expect(addCalled).to.equal(2);
+      expect(lastAdd).to.equal('~bar~');
+      expect(removeCalled).to.equal(0);
+
+      obj.object = { foo: '~foo~', bar: '~bar~' };
+      observations.syncNow();
+
+      expect(addCalled).to.equal(3);
+      expect(lastAdd).to.equal('~foo~');
+      expect(removeCalled).to.equal(1);
+      expect(lastRemove).to.equal('foo');
+
+      obj.object = { test: '~foo~' };
+      observations.syncNow();
+
+      expect(addCalled).to.equal(4);
+      expect(lastAdd).to.equal('~foo~');
+      expect(removeCalled).to.equal(3);
+      expect(lastRemove).to.equal('~bar~');
+
+      obj.object = null;
+      observations.syncNow();
+
+      expect(addCalled).to.equal(4);
+      expect(removeCalled).to.equal(4);
+      expect(lastRemove).to.equal('~foo~');
+
+    });
+
   });
 
 
+  describe('computed', function() {
+    var observations, computed;
+
+    beforeEach('should create a new observations object', function() {
+      observations = new Observations();
+      computed = observations.computed;
+      observations.formatters.upper = function(value) {
+        return typeof value === 'string' ? value.toUpperCase() : value;
+      };
+    });
+
+
+    it('should compute a map of properties', function() {
+      var father = {
+        firstName: 'Bob',
+        lastName: 'Smith',
+        children: [
+          { id: 1, name: 'Joey' },
+          { id: 3, name: 'Sally' },
+          { id: 93, name: 'Buddy' }
+        ]
+      };
+
+      computed.extend(father, {
+        test: '!foo',
+        fullName: 'firstName + " " + lastName',
+        caps: 'fullName | upper',
+        childrenFullNames: computed.map('children', 'name + " " + $$.lastName'),
+        test2: computed.if('!test', 'childrenFullNames[children[0].id]')
+      });
+
+      expect(father.test).to.equal(true);
+      expect(father.test2).to.equal(undefined);
+      expect(father.fullName).to.equal('Bob Smith');
+      expect(father.caps).to.equal('BOB SMITH');
+      expect(father.childrenFullNames).to.deep.equal({
+        1: 'Joey Smith',
+        3: 'Sally Smith',
+        93: 'Buddy Smith',
+      });
+
+      father.foo = 'Test';
+      father.firstName = 'John';
+      father.lastName = 'Gordon';
+
+      observations.syncNow();
+      expect(father.test).to.equal(false);
+      expect(father.test2).to.equal('Joey Gordon');
+      expect(father.fullName).to.equal('John Gordon');
+      expect(father.caps).to.equal('JOHN GORDON');
+      expect(father.childrenFullNames).to.deep.equal({
+        1: 'Joey Gordon',
+        3: 'Sally Gordon',
+        93: 'Buddy Gordon',
+      });
+
+
+      father.foo = 'Test2';
+
+      observations.syncNow();
+      expect(father.test2).to.equal('Joey Gordon');
+    });
+
+  });
 
 });

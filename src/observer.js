@@ -12,15 +12,15 @@ var diff = require('differences-js');
 // receives an array of splices (for an array), or an array of change objects (for an object) which are the same
 // format that `Array.observe` and `Object.observe` return
 // <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/observe>.
-function Observer(observations, expr, callback, callbackContext) {
-  if (typeof expr === 'function') {
-    this.getter = expr;
-    this.setter = expr;
+function Observer(observations, expression, callback, callbackContext) {
+  if (typeof expression === 'function') {
+    this.getter = expression;
+    this.setter = expression;
   } else {
-    this.getter = expressions.parse(expr, observations.globals, observations.formatters);
+    this.getter = expressions.parse(expression, observations.globals, observations.formatters);
   }
   this.observations = observations;
-  this.expr = expr;
+  this.expression = expression;
   this.callback = callback;
   this.callbackContext = callbackContext;
   this.skip = false;
@@ -65,8 +65,8 @@ Class.extend(Observer, {
     if (this.setter === false) return;
     if (!this.setter) {
       try {
-        this.setter = typeof this.expr === 'string'
-          ? expressions.parseSetter(this.expr, this.observations.globals, this.observations.formatters)
+        this.setter = typeof this.expression === 'string'
+          ? expressions.parseSetter(this.expression, this.observations.globals, this.observations.formatters)
           : false;
       } catch (e) {
         this.setter = false;
@@ -109,7 +109,7 @@ Class.extend(Observer, {
                          Array.isArray(this.oldValue);
 
       if (useCompareBy) {
-        var expr = this.compareBy;
+        var compareExpression = this.compareBy;
         var name = this.compareByName;
         var index = this.compareByIndex || '__index__';
         var ctx = this.context;
@@ -119,10 +119,10 @@ Class.extend(Observer, {
         if (!name) {
           name = '__item__';
           // Turn "id" into "__item__.id"
-          expr = name + '.' + expr;
+          compareExpression = name + '.' + compareExpression;
         }
 
-        var getCompareValue = expressions.parse(expr, globals, formatters, name, index);
+        var getCompareValue = expressions.parse(compareExpression, globals, formatters, name, index);
         changed = diff.values(value.map(getCompareValue, ctx), oldValue.map(getCompareValue, ctx));
       } else {
         changed = diff.values(value, this.oldValue);
