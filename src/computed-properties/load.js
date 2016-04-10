@@ -1,4 +1,4 @@
-module.exports = LoadProperty;
+module.exports = AsyncProperty;
 var ComputedProperty = require('./computed-property');
 var expressions = require('expressions-js');
 
@@ -9,14 +9,19 @@ var expressions = require('expressions-js');
  * @param {String} loadExpression The expression which will be executed when the `when` value changes and the result of
  * the returned promise is set on the object.
  */
-function LoadProperty(whenExpression, loadExpression) {
-  this.whenExpression = whenExpression;
-  this.load = expressions.parse(loadExpression);
+function AsyncProperty(whenExpression, loadExpression) {
+  if (!loadExpression) {
+    this.whenExpression = 'true';
+    this.load = expressions.parse(whenExpression);
+  } else {
+    this.whenExpression = whenExpression;
+    this.load = expressions.parse(loadExpression);
+  }
   this.observer = null;
 }
 
 
-ComputedProperty.extend(LoadProperty, {
+ComputedProperty.extend(AsyncProperty, {
 
   addTo: function(computedObject, propertyName) {
     var observations = this.observations;
