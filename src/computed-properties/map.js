@@ -17,57 +17,68 @@ function MapProperty(sourceExpression, keyExpression, resultExpression) {
   this.sourceExpression = sourceExpression;
   this.getKey = expressions.parse(keyExpression);
   this.resultExpression = resultExpression;
-  this.map = {};
-  this.observers = Object.create(null);
 }
 
 
 ComputedProperty.extend(MapProperty, {
 
   addTo: function(computedObject, propertyName) {
-    computedObject[propertyName] = this.map;
-    this.computedObject = computedObject;
-    return this.observations.observeMembers(this.sourceExpression, this.addItem, this.removeItem, this);
+    var map = {};
+    var observers = {};
+    computedObject[propertyName] = map;
+    var add = this.addItem.bind(this, computedObject, map, observers);
+    var remove = this.removeItem.bind(this, computedObject, map, observers);
+    return this.observations.observeMembers(this.sourceExpression, add, remove, this);
   },
 
-  addItem: function(item) {
+  addItem: function(computedObject, map, observers, item) {
     var key = item && this.getKey.call(item);
-    if (key) {
-      if (key in this.observers) {
-        removeObserver(key);
-      }
+    if (!key) {
+      return;
+    }
 
-      if (this.resultExpression) {
-        var observer = this.observations.createObserver(this.resultExpression, function(value) {
+    if (key in observers) {
+      removeObserver(observers, key);
+    }
+
+    if (this.resultExpression) {
+      var observer;
+      if (this.resultExpression.isComputedProperty) {
+        observer = this.resultExpression.addTo(map, key);
+      } else if (typeof this.resultExpression === 'string') {
+        observer = this.observations.createObserver(this.resultExpression, function(value) {
           if (value === undefined) {
-            delete this.map[key];
+            delete map[key];
           } else {
-            this.map[key] = value;
+            map[key] = value;
           }
         }, this);
-        var proxy = Object.create(item);
-        proxy.$$ = this.computedObject;
-        observer.bind(proxy);
-        this.observers[key] = observer;
       } else {
-        this.map[key] = item;
+        throw new TypeError('Invalid resultExpression for computed.map');
       }
+
+      var proxy = Object.create(item);
+      proxy.$$ = computedObject;
+      observer.bind(proxy);
+      observers[key] = observer;
+    } else {
+      map[key] = item;
     }
   },
 
-  removeItem: function(item) {
+  removeItem: function(computedObject, map, observers, item) {
     var key = item && this.getKey.call(item);
     if (key) {
-      removeObserver(key);
-      delete this.map[key];
+      removeObserver(observers, key);
+      delete map[key];
     }
   },
 
-  removeObserver: function(key) {
-    var observer = this.observers[key];
+  removeObserver: function(observers, key) {
+    var observer = observers[key];
     if (observer) {
       observer.unbind();
-      delete this.observers[key];
+      delete observers[key];
     }
   }
 });

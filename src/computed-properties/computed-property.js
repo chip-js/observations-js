@@ -9,6 +9,10 @@ function ComputedProperty() {}
 
 Class.extend(ComputedProperty, {
 
+  get isComputedProperty() {
+    return true;
+  },
+
   /**
    * Add a computed property to a computed object
    * @param {Object} computedObject The object which this property is being added to
