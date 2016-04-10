@@ -17,7 +17,7 @@ function IfProperty(ifExpression, thenExpression) {
 ComputedProperty.extend(IfProperty, {
 
   addTo: function(computedObject, propertyName) {
-    if (this.thenExpression instanceof ComputedProperty) {
+    if (this.thenExpression.isComputedProperty) {
       this.observer = this.thenExpression.addTo(computedObject, propertyName);
     } else {
       this.observer = this.observations.createObserver(this.thenExpression, function(value) {
