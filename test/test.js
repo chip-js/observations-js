@@ -359,9 +359,9 @@ describe('Observations.js', function() {
         firstName: 'Bob',
         lastName: 'Smith',
         children: [
-          { id: 1, name: 'Joey' },
-          { id: 3, name: 'Sally' },
-          { id: 93, name: 'Buddy' }
+          { getId: function() { return 1 }, name: 'Joey' },
+          { getId: function() { return 3 }, name: 'Sally' },
+          { getId: function() { return 93 }, name: 'Buddy' }
         ]
       };
 
@@ -369,8 +369,8 @@ describe('Observations.js', function() {
         test: '!foo',
         fullName: 'firstName + " " + lastName',
         caps: 'fullName | upper',
-        childrenFullNames: computed.map('children', 'name + " " + $$.lastName'),
-        test2: computed.if('!test', 'childrenFullNames[children[0].id]')
+        childrenFullNames: computed.map('children', 'getId()', 'name + " " + $$.lastName'),
+        test2: computed.if('!test', 'childrenFullNames[children[0].getId()]')
       });
 
       expect(father.test).to.equal(true);
