@@ -380,7 +380,7 @@ describe('Observations.js', function() {
         caps: 'fullName | upper',
         childrenFullNames: computed.map('children', 'getId()', 'name + " " + $$.lastName'),
         test2: computed.if('!test', 'childrenFullNames[children[0].getId()]'),
-        loadedValue: computed.load('test', 'loadData()')
+        loadedValue: computed.async('test', 'loadData()')
       });
 
       expect(father.test).to.equal(true);
