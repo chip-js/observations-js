@@ -7,17 +7,13 @@ var expressions = require('expressions-js');
  * value being the result of `expression`. `key` is optional, defaulting to "id" when not provided. `sourceExpression`
  * can resolve to an array or an object hash.
  * @param {Array|Object} sourceExpression An array or object whose members will be added to the map.
- * @param {String} keyExpression [Optional] The name of the property to key against as values are added to the map.
+ * @param {String} keyExpression The name of the property to key against as values are added to the map.
  *                               Defaults to "id"
- * @param {String} expression The expression evaluated against the array/object member whose value is added to the map.
+ * @param {String} resultExpression [Optional] The expression evaluated against the array/object member whose value is
+ *                                  added to the map. If not provided, the member will be added.
  * @return {Object} The object map of key=>value
  */
 function MapProperty(sourceExpression, keyExpression, resultExpression) {
-  if (!resultExpression) {
-    resultExpression = keyExpression;
-    keyExpression = 'id';
-  }
-
   this.sourceExpression = sourceExpression;
   this.getKey = expressions.parse(keyExpression);
   this.resultExpression = resultExpression;
@@ -40,17 +36,22 @@ ComputedProperty.extend(MapProperty, {
       if (key in this.observers) {
         removeObserver(key);
       }
-      var observer = this.observations.createObserver(this.resultExpression, function(value) {
-        if (value === undefined) {
-          delete this.map[key];
-        } else {
-          this.map[key] = value;
-        }
-      }, this);
-      var proxy = Object.create(item);
-      proxy.$$ = this.computedObject;
-      observer.bind(proxy);
-      this.observers[key] = observer;
+
+      if (this.resultExpression) {
+        var observer = this.observations.createObserver(this.resultExpression, function(value) {
+          if (value === undefined) {
+            delete this.map[key];
+          } else {
+            this.map[key] = value;
+          }
+        }, this);
+        var proxy = Object.create(item);
+        proxy.$$ = this.computedObject;
+        observer.bind(proxy);
+        this.observers[key] = observer;
+      } else {
+        this.map[key] = item;
+      }
     }
   },
 
@@ -58,6 +59,7 @@ ComputedProperty.extend(MapProperty, {
     var key = item && this.getKey.call(item);
     if (key) {
       removeObserver(key);
+      delete this.map[key];
     }
   },
 
@@ -65,7 +67,6 @@ ComputedProperty.extend(MapProperty, {
     var observer = this.observers[key];
     if (observer) {
       observer.unbind();
-      observer.sync();
       delete this.observers[key];
     }
   }
