@@ -100,6 +100,9 @@ exports.create = function(observations) {
   };
 
 
+  // Make the ComputedProperty class available for extension
+  computed.ComputedProperty = ComputedProperty;
+
   return computed;
 };
 
