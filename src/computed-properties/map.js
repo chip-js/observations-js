@@ -1,24 +1,25 @@
 module.exports = MapProperty;
 var ComputedProperty = require('./computed-property');
+var expressions = require('expressions-js');
 
 /**
  * Creates an object hash with the key being the value of the `key` property of each item in `sourceExpression` and the
  * value being the result of `expression`. `key` is optional, defaulting to "id" when not provided. `sourceExpression`
  * can resolve to an array or an object hash.
  * @param {Array|Object} sourceExpression An array or object whose members will be added to the map.
- * @param {String} keyName [Optional] The name of the property to key against as values are added to the map. Defaults
- *                         to "id"
+ * @param {String} keyExpression [Optional] The name of the property to key against as values are added to the map.
+ *                               Defaults to "id"
  * @param {String} expression The expression evaluated against the array/object member whose value is added to the map.
  * @return {Object} The object map of key=>value
  */
-function MapProperty(sourceExpression, keyName, resultExpression) {
+function MapProperty(sourceExpression, keyExpression, resultExpression) {
   if (!resultExpression) {
-    resultExpression = keyName;
-    keyName = 'id';
+    resultExpression = keyExpression;
+    keyExpression = 'id';
   }
 
   this.sourceExpression = sourceExpression;
-  this.keyName = keyName;
+  this.keyExpression = expressions.parse(keyExpression);
   this.resultExpression = resultExpression;
   this.map = {};
   this.observers = Object.create(null);
@@ -34,9 +35,8 @@ ComputedProperty.extend(MapProperty, {
   },
 
   addItem: function(item) {
-    var key = item && item[this.keyName];
+    var key = item && this.keyExpression.call(item);
     if (key) {
-      var key = item[this.keyName];
       if (key in this.observers) {
         removeObserver(key);
       }
@@ -55,7 +55,7 @@ ComputedProperty.extend(MapProperty, {
   },
 
   removeItem: function(item) {
-    var key = item && item[this.keyName];
+    var key = item && this.keyExpression.call(item);
     if (key) {
       removeObserver(key);
     }
