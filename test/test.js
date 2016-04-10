@@ -355,6 +355,7 @@ describe('Observations.js', function() {
 
 
     it('should compute a map of properties', function() {
+      var loadedCount = 0;
       var father = {
         firstName: 'Bob',
         lastName: 'Smith',
@@ -362,7 +363,15 @@ describe('Observations.js', function() {
           { getId: function() { return 1 }, name: 'Joey' },
           { getId: function() { return 3 }, name: 'Sally' },
           { getId: function() { return 93 }, name: 'Buddy' }
-        ]
+        ],
+        loadData: function() {
+          loadedCount++;
+          return {
+            then: function(resolveHandler) {
+              resolveHandler('foobar');
+            }
+          };
+        }
       };
 
       computed.extend(father, {
@@ -370,7 +379,8 @@ describe('Observations.js', function() {
         fullName: 'firstName + " " + lastName',
         caps: 'fullName | upper',
         childrenFullNames: computed.map('children', 'getId()', 'name + " " + $$.lastName'),
-        test2: computed.if('!test', 'childrenFullNames[children[0].getId()]')
+        test2: computed.if('!test', 'childrenFullNames[children[0].getId()]'),
+        loadedValue: computed.load('test', 'loadData()')
       });
 
       expect(father.test).to.equal(true);
@@ -382,6 +392,8 @@ describe('Observations.js', function() {
         3: 'Sally Smith',
         93: 'Buddy Smith',
       });
+      expect(loadedCount).to.equal(1);
+      expect(father.loadedValue).to.equal('foobar');
 
       father.foo = 'Test';
       father.firstName = 'John';

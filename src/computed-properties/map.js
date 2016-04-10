@@ -19,7 +19,7 @@ function MapProperty(sourceExpression, keyExpression, resultExpression) {
   }
 
   this.sourceExpression = sourceExpression;
-  this.keyExpression = expressions.parse(keyExpression);
+  this.getKey = expressions.parse(keyExpression);
   this.resultExpression = resultExpression;
   this.map = {};
   this.observers = Object.create(null);
@@ -35,7 +35,7 @@ ComputedProperty.extend(MapProperty, {
   },
 
   addItem: function(item) {
-    var key = item && this.keyExpression.call(item);
+    var key = item && this.getKey.call(item);
     if (key) {
       if (key in this.observers) {
         removeObserver(key);
@@ -55,7 +55,7 @@ ComputedProperty.extend(MapProperty, {
   },
 
   removeItem: function(item) {
-    var key = item && this.keyExpression.call(item);
+    var key = item && this.getKey.call(item);
     if (key) {
       removeObserver(key);
     }

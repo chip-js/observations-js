@@ -1,6 +1,7 @@
 var ComputedProperty = require('./computed-properties/computed-property');
 var MapProperty = require('./computed-properties/map');
 var IfProperty = require('./computed-properties/if');
+var LoadProperty = require('./computed-properties/load');
 
 
 exports.create = function(observations) {
@@ -75,9 +76,29 @@ exports.create = function(observations) {
     return new MapProperty(sourceExpression, keyName, resultExpression);
   };
 
+
+  /**
+   * Assigns the result of the `thenExpression` to the object's property when the `ifExpression` is true.
+   * @param {String} ifExpression The conditional expression use to determine when to call the `thenExpression`
+   * @param {String} thenExpression The expression which will be executed when `if` is truthy and the result set on the
+   * object.
+   */
   computed.if = function(ifExpression, thenExpression) {
     return new IfProperty(ifExpression, thenExpression);
   };
+
+
+  /**
+   * Calls the load expression and assigns the results to the object's property when the `whenExpression` changes value to
+   * anything other than a falsey value such as undefined. The return value of the load expression should be a Promise.
+   * @param {String} whenExpression The conditional expression use to determine when to call the `loadExpression`
+   * @param {String} loadExpression The expression which will be executed when the `when` value changes and the result of
+   * the returned promise is set on the object.
+   */
+  computed.load = function(whenExpression, loadExpression) {
+    return new LoadProperty(whenExpression, loadExpression);
+  };
+
 
   return computed;
 };
