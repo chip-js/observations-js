@@ -16,16 +16,16 @@ function IfProperty(ifExpression, thenExpression) {
 
 ComputedProperty.extend(IfProperty, {
 
-  addTo: function(computedObject, propertyName) {
+  addTo: function(observations, computedObject, propertyName) {
     if (this.thenExpression.isComputedProperty) {
-      this.observer = this.thenExpression.addTo(computedObject, propertyName);
+      this.observer = this.thenExpression.addTo(observations, computedObject, propertyName);
     } else {
-      this.observer = this.observations.createObserver(this.thenExpression, function(value) {
+      this.observer = observations.createObserver(this.thenExpression, function(value) {
         computedObject[propertyName] = value;
       });
     }
 
-    return this.observations.createObserver(this.ifExpression, function(value) {
+    return observations.createObserver(this.ifExpression, function(value) {
       if (value && !this.observer.context) {
         this.observer.bind(computedObject);
       } else if (!value && this.observer.context) {
