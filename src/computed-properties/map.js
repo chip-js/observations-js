@@ -69,7 +69,7 @@ ComputedProperty.extend(MapProperty, {
   removeItem: function(computedObject, map, observers, item) {
     var key = item && this.getKey.call(item);
     if (key) {
-      removeObserver(observers, key);
+      this.removeObserver(observers, key);
       delete map[key];
     }
   },
