@@ -1,4 +1,4 @@
-module.exports = IfProperty;
+module.exports = ExprProperty;
 var ComputedProperty = require('./computed-property');
 
 /**
@@ -7,24 +7,14 @@ var ComputedProperty = require('./computed-property');
  * @param {String|ComputedProperty} thenExpression The expression which will be executed when `if` is truthy and the
  *                                                 result set on the object. May also nest computed properties.
  */
-function IfProperty(ifExpression, thenExpression) {
-  this.ifExpression = ifExpression;
-  this.thenExpression = thenExpression;
+function ExprProperty(expression) {
+  this.expression = expression;
 }
 
 
-ComputedProperty.extend(IfProperty, {
+ComputedProperty.extend(ExprProperty, {
 
   addTo: function(observations, computedObject, propertyName) {
-    var observer = this.watch(observations, this.thenExpression, computedObject, propertyName);
-
-    return observations.createObserver(this.ifExpression, function(value) {
-      if (value && !observer.context) {
-        observer.bind(computedObject);
-      } else if (!value && observer.context) {
-        observer.unbind();
-        observer.sync();
-      }
-    });
+    return this.watch(observations, this.expression, computedObject, propertyName);
   }
 });

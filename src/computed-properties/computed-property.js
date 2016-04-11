@@ -21,5 +21,21 @@ Class.extend(ComputedProperty, {
    */
   addTo: function(computedObject, propertyName) {
     throw new Error('Abstract function is not implemented');
+  },
+
+  watch: function(observations, expression, obj, property) {
+    if (typeof expression === 'string') {
+      // This is a computed expression
+      return observations.createObserver(expression, function(value) {
+        if (value === undefined) {
+          delete obj[property];
+        } else {
+          obj[property] = value;
+        }
+      });
+    } else if (expression.isComputedProperty) {
+      // Add ComputedProperty's observer to the observers and bind if enabled
+      return expression.addTo(observations, obj, property);
+    }
   }
 });

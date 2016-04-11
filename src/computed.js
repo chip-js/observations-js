@@ -1,4 +1,5 @@
 var ComputedProperty = require('./computed-properties/computed-property');
+var ExprProperty = require('./computed-properties/expr');
 var MapProperty = require('./computed-properties/map');
 var IfProperty = require('./computed-properties/if');
 var AsyncProperty = require('./computed-properties/async');
@@ -62,6 +63,16 @@ exports.create = function(observations) {
 
 
   /**
+   * Assigns the result of the expression to the computed object's property.
+   * @param {String} expression The string expression
+   * @return {ComputedProperty}
+   */
+  computed.expr = function(expression) {
+    return new ExprProperty(expression);
+  };
+
+
+  /**
    * Creates an object hash with the key being the value of the `key` property of each item in `sourceExpression` and the
    * value being the result of `expression`. `key` is optional, defaulting to "id" when not provided. `sourceExpression`
    * can resolve to an array or an object hash.
@@ -69,7 +80,7 @@ exports.create = function(observations) {
    * @param {String} keyName [Optional] The name of the property to key against as values are added to the map. Defaults
    *                         to "id"
    * @param {String} expression The expression evaluated against the array/object member whose value is added to the map.
-   * @return {Object} The object map of key=>value
+   * @return {ComputedProperty}
    */
   computed.map = function(sourceExpression, keyName, resultExpression) {
     return new MapProperty(sourceExpression, keyName, resultExpression);
@@ -81,6 +92,7 @@ exports.create = function(observations) {
    * @param {String} ifExpression The conditional expression use to determine when to call the `thenExpression`
    * @param {String} thenExpression The expression which will be executed when `if` is truthy and the result set on the
    * object.
+   * @return {ComputedProperty}
    */
   computed.if = function(ifExpression, thenExpression) {
     return new IfProperty(ifExpression, thenExpression);
@@ -94,6 +106,7 @@ exports.create = function(observations) {
    * @param {String} whenExpression The conditional expression use to determine when to call the `asyncExpression`
    * @param {String} asyncExpression The expression which will be executed when the `when` value changes and the result of
    * the returned promise is set on the object.
+   * @return {ComputedProperty}
    */
   computed.async = function(whenExpression, asyncExpression) {
     return new AsyncProperty(whenExpression, asyncExpression);
