@@ -24,9 +24,7 @@ function AsyncProperty(whenExpression, asyncExpression) {
 
 ComputedProperty.extend(AsyncProperty, {
 
-  addTo: function(computedObject, propertyName) {
-    var observations = this.observations;
-
+  addTo: function(observations, computedObject, propertyName) {
     return observations.createObserver(this.whenExpression, function(value) {
       if (value) {
         var promise = this.runAsyncMethod.call(computedObject);

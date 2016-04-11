@@ -22,16 +22,16 @@ function MapProperty(sourceExpression, keyExpression, resultExpression) {
 
 ComputedProperty.extend(MapProperty, {
 
-  addTo: function(computedObject, propertyName) {
+  addTo: function(observations, computedObject, propertyName) {
     var map = {};
     var observers = {};
     computedObject[propertyName] = map;
-    var add = this.addItem.bind(this, computedObject, map, observers);
+    var add = this.addItem.bind(this, observations, computedObject, map, observers);
     var remove = this.removeItem.bind(this, computedObject, map, observers);
-    return this.observations.observeMembers(this.sourceExpression, add, remove, this);
+    return observations.observeMembers(this.sourceExpression, add, remove, this);
   },
 
-  addItem: function(computedObject, map, observers, item) {
+  addItem: function(observations, computedObject, map, observers, item) {
     var key = item && this.getKey.call(item);
     if (!key) {
       return;
@@ -44,9 +44,9 @@ ComputedProperty.extend(MapProperty, {
     if (this.resultExpression) {
       var observer;
       if (this.resultExpression.isComputedProperty) {
-        observer = this.resultExpression.addTo(map, key);
+        observer = this.resultExpression.addTo(observations, map, key);
       } else if (typeof this.resultExpression === 'string') {
-        observer = this.observations.createObserver(this.resultExpression, function(value) {
+        observer = observations.createObserver(this.resultExpression, function(value) {
           if (value === undefined) {
             delete map[key];
           } else {
