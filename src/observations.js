@@ -2,6 +2,7 @@ module.exports = Observations;
 var Class = require('chip-utils/class');
 var Observer = require('./observer');
 var computed = require('./computed');
+var expressions = require('expressions-js');
 var requestAnimationFrame = global.requestAnimationFrame || setTimeout;
 var cancelAnimationFrame = global.cancelAnimationFrame || clearTimeout;
 
@@ -21,6 +22,7 @@ function Observations() {
   this.pendingSync = null;
   this.syncNow = this.syncNow.bind(this);
   this.computed = computed.create(this);
+  this.expressions = expressions;
 }
 
 
@@ -75,6 +77,29 @@ Class.extend(Observations, {
 
     observer.getChangeRecords = true;
     return observer;
+  },
+
+
+  /**
+   * Gets the value of an expression from the given context object
+   * @param {Object} context The context object the expression will be evaluated against
+   * @param {String} expression The expression to evaluate
+   * @return {mixed} The result of the expression against the context
+   */
+  get: function(context, expression) {
+    return expressions.parse(expression).call(context);
+  },
+
+
+  /**
+   * Sets the value on the expression in the given context object
+   * @param {Object} context The context object the expression will be evaluated against
+   * @param {String} expression The expression to set a value with
+   * @param {mixed} value The value to set on the expression
+   * @return {mixed} The result of the expression against the context
+   */
+  set: function(source, expression, value) {
+    return expressions.parseSetter(expression).call(source, value);
   },
 
 
