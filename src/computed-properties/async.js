@@ -18,7 +18,6 @@ function AsyncProperty(whenExpression, asyncExpression) {
     this.whenExpression = whenExpression;
     this.runAsyncMethod = expressions.parse(asyncExpression);
   }
-  this.observer = null;
 }
 
 

@@ -42,18 +42,8 @@ ComputedProperty.extend(MapProperty, {
     }
 
     if (this.resultExpression) {
-      var observer;
-      if (this.resultExpression.isComputedProperty) {
-        observer = this.resultExpression.addTo(observations, map, key);
-      } else if (typeof this.resultExpression === 'string') {
-        observer = observations.createObserver(this.resultExpression, function(value) {
-          if (value === undefined) {
-            delete map[key];
-          } else {
-            map[key] = value;
-          }
-        }, this);
-      } else {
+      var observer = this.watch(observations, this.resultExpression, map, key);
+      if (!observer) {
         throw new TypeError('Invalid resultExpression for computed.map');
       }
 
