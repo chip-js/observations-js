@@ -35,6 +35,8 @@ ComputedProperty.extend(AsyncProperty, {
             computedObject[propertyName] = undefined;
             observations.sync();
           });
+        } else {
+          computedObject[propertyName] = promise;
         }
       } else {
         computedObject[propertyName] = undefined;
