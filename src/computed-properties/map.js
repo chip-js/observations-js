@@ -13,10 +13,11 @@ var expressions = require('expressions-js');
  *                                  added to the map. If not provided, the member will be added.
  * @return {Object} The object map of key=>value
  */
-function MapProperty(sourceExpression, keyExpression, resultExpression) {
+function MapProperty(sourceExpression, keyExpression, resultExpression, removeExpression) {
   this.sourceExpression = sourceExpression;
   this.getKey = expressions.parse(keyExpression);
   this.resultExpression = resultExpression;
+  this.removeExpression = removeExpression;
 }
 
 
@@ -27,7 +28,7 @@ ComputedProperty.extend(MapProperty, {
     var observers = {};
     computedObject[propertyName] = map;
     var add = this.addItem.bind(this, observations, computedObject, map, observers);
-    var remove = this.removeItem.bind(this, computedObject, map, observers);
+    var remove = this.removeItem.bind(this, observations, computedObject, map, observers);
     return observations.observeMembers(this.sourceExpression, add, remove, this);
   },
 
@@ -56,10 +57,13 @@ ComputedProperty.extend(MapProperty, {
     }
   },
 
-  removeItem: function(computedObject, map, observers, item) {
+  removeItem: function(observations, computedObject, map, observers, item) {
     var key = item && this.getKey.call(item);
     if (key) {
       this.removeObserver(observers, key);
+      if (this.removeExpression) {
+        observations.get(computedObject, this.removeExpression);
+      }
       delete map[key];
     }
   },
