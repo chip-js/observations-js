@@ -82,8 +82,8 @@ exports.create = function(observations) {
    * @param {String} expression The expression evaluated against the array/object member whose value is added to the map.
    * @return {ComputedProperty}
    */
-  computed.map = function(sourceExpression, keyName, resultExpression) {
-    return new MapProperty(sourceExpression, keyName, resultExpression);
+  computed.map = function(sourceExpression, keyName, resultExpression, removeExpression) {
+    return new MapProperty(sourceExpression, keyName, resultExpression, removeExpression);
   };
 
 

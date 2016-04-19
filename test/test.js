@@ -356,6 +356,7 @@ describe('Observations.js', function() {
 
     it('should compute a map of properties', function() {
       var loadedCount = 0;
+      var removedCount = 0;
       var father = {
         firstName: 'Bob',
         lastName: 'Smith',
@@ -378,9 +379,12 @@ describe('Observations.js', function() {
         test: '!foo',
         fullName: 'firstName + " " + lastName',
         caps: 'fullName | upper',
-        childrenFullNames: computed.map('children', 'getId()', 'name + " " + $$.lastName'),
+        childrenFullNames: computed.map('children', 'getId()', 'name + " " + $$.lastName', 'countRemoved()'),
         test2: computed.if('!test', 'childrenFullNames[children[0].getId()]'),
-        loadedValue: computed.async('test', 'loadData()')
+        loadedValue: computed.async('test', 'loadData()'),
+        countRemoved: function() {
+          removedCount++;
+        }
       });
 
       expect(father.test).to.equal(true);
@@ -393,6 +397,7 @@ describe('Observations.js', function() {
         93: 'Buddy Smith',
       });
       expect(loadedCount).to.equal(1);
+      expect(removedCount).to.equal(0);
       expect(father.loadedValue).to.equal('foobar');
 
       father.foo = 'Test';
@@ -409,12 +414,22 @@ describe('Observations.js', function() {
         3: 'Sally Gordon',
         93: 'Buddy Gordon',
       });
+      expect(removedCount).to.equal(0);
 
 
       father.foo = 'Test2';
 
       observations.syncNow();
       expect(father.test2).to.equal('Joey Gordon');
+
+      father.children.pop();
+      observations.syncNow();
+
+      expect(father.childrenFullNames).to.deep.equal({
+        1: 'Joey Gordon',
+        3: 'Sally Gordon',
+      });
+      expect(removedCount).to.equal(1);
     });
 
   });
