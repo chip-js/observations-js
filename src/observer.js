@@ -23,6 +23,7 @@ function Observer(observations, expression, callback, callbackContext) {
   this.expression = expression;
   this.callback = callback;
   this.callbackContext = callbackContext;
+  this.getChangeRecords = false;
   this.skip = false;
   this.forceUpdateNextSync = false;
   this.context = null;
@@ -124,8 +125,10 @@ Class.extend(Observer, {
 
         var getCompareValue = expressions.parse(compareExpression, globals, formatters, name, index);
         changed = diff.values(value.map(getCompareValue, ctx), oldValue.map(getCompareValue, ctx));
-      } else {
+      } else if (this.getChangeRecords) {
         changed = diff.values(value, this.oldValue);
+      } else {
+        changed = diff.basic(value, this.oldValue);
       }
 
 
