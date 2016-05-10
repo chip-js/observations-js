@@ -110,6 +110,44 @@ describe('Observations.js', function() {
     });
 
 
+    it('should be called when an object is changed', function() {
+      obj.name = { first: 'test', last: 'test' };
+      observer.bind(obj);
+      expect(called).to.equal(1);
+
+      obj.name = { first: 'test', last: 'test' };
+      observations.syncNow();
+      expect(called).to.equal(2);
+    });
+
+
+    it('should return change records when requested', function() {
+      obj.name = { first: 'test', last: 'test' };
+      observer.getChangeRecords = true;
+      observer.bind(obj);
+      expect(called).to.equal(1);
+
+      obj.name.first = 'test2';
+      obj.name.last = 'test2';
+      observations.syncNow();
+      expect(called).to.equal(2);
+      expect(lastChanges).to.not.be.undefined;
+      expect(lastChanges).to.have.length(2);
+    });
+
+
+    it('should not be called when an object is changed if the records have not', function() {
+      obj.name = { first: 'test', last: 'test' };
+      observer.getChangeRecords = true;
+      observer.bind(obj);
+      expect(called).to.equal(1);
+
+      obj.name = { first: 'test', last: 'test' };
+      observations.syncNow();
+      expect(called).to.equal(1);
+    });
+
+
     it('should support compareBy', function() {
       var obj = { children: [{ id: 1, name: 'Bob' }]};
       observer = new Observer(observations, 'children', callback);
