@@ -28,8 +28,19 @@ function Observations() {
 
 Class.extend(Observations, {
 
-  // Creates a new observer attached to this observations object. When the observer is bound to a context it will be added
-  // to this `observations` and synced when this `observations.sync` is called.
+  /**
+   * Observes any changes to the result of the expression on the context object and calls the callback.
+   */
+  observe: function(context, expression, callback, callbackContext) {
+    var observer = this.createObserver(expression, callback, callbackContext);
+    observer.bind(context);
+    return observer;
+  },
+
+  /**
+   * Creates a new observer attached to this observations object. When the observer is bound to a context it will be
+   * added to this `observations` and synced when this `observations.sync` is called.
+   */
   createObserver: function(expression, callback, callbackContext) {
     return new Observer(this, expression, callback, callbackContext);
   },

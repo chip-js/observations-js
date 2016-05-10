@@ -272,6 +272,24 @@ describe('Observations.js', function() {
     });
 
 
+    it('should observe a context for changes to the results of an expression', function() {
+      var obj = {}, called = 0;
+      observations.observe(obj, 'foo', function() {
+        called++;
+      });
+
+      expect(called).to.equal(1);
+      observations.syncNow();
+      expect(called).to.equal(1);
+      obj.foo = 'bar';
+      observations.syncNow();
+      expect(called).to.equal(2);
+      obj.foo = 'foobar';
+      observations.syncNow();
+      expect(called).to.equal(3);
+    });
+
+
     it('should observe members of an array', function() {
       var lastAdd, addCalled = 0, addCallback = function(member) {
         lastAdd = member;
