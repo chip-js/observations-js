@@ -43,7 +43,7 @@ exports.create = function(observations) {
         observer = observations.createObserver(expression, function(value) {
           obj[property] = value;
         });
-      } else if (expression.isComputedProperty) {
+      } else if (expression && expression.isComputedProperty) {
         // Add ComputedProperty's observer to the observers and bind if enabled
         observer = expression.addTo(observations, obj, property);
       } else {
