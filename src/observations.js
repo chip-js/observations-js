@@ -92,13 +92,35 @@ Class.extend(Observations, {
 
 
   /**
+   * Parses an expression into a function using the globals and formatters objects associated with this instance of
+   * observations.
+   * @param {String} expression The expression string to parse into a function
+   * @param {Object} options Additional options to pass to the parser.
+   *                        `{ isSetter: true }` will make this expression a setter that accepts a value.
+   *                        `{ extraArgs: [ 'argName' ]` will make extra arguments to pass in to the function.
+   * @return {Function} A function that may be called to execute the expression (call it against a context using=
+   * `func.call(context)` in order to get the data from the context correct)
+   */
+  getExpression: function(expression, options) {
+    if (options && options.isSetter) {
+      return expressions.parseSetter(expression, this.globals, this.formatters, options.extraArgs);
+    } else if (options && options.extraArgs) {
+      var allArgs = [expression, this.globals, this.formatters].concat(options.extraArgs);
+      return expressions.parse.apply(expressions, allArgs);
+    } else {
+      return expressions.parse(expression, this.globals, this.formatters);
+    }
+  },
+
+
+  /**
    * Gets the value of an expression from the given context object
    * @param {Object} context The context object the expression will be evaluated against
    * @param {String} expression The expression to evaluate
    * @return {mixed} The result of the expression against the context
    */
   get: function(context, expression) {
-    return expressions.parse(expression).call(context);
+    return this.getExpression(expression).call(context);
   },
 
 
@@ -110,7 +132,7 @@ Class.extend(Observations, {
    * @return {mixed} The result of the expression against the context
    */
   set: function(source, expression, value) {
-    return expressions.parseSetter(expression).call(source, value);
+    return this.getExpression(expression, { isSetter: true }).call(source, value);
   },
 
 

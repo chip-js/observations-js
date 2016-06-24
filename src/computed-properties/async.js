@@ -1,6 +1,5 @@
 module.exports = AsyncProperty;
 var ComputedProperty = require('./computed-property');
-var expressions = require('expressions-js');
 
 /**
  * Calls the async expression and assigns the results to the object's property when the `whenExpression` changes value
@@ -12,18 +11,22 @@ var expressions = require('expressions-js');
  */
 function AsyncProperty(whenExpression, asyncExpression) {
   if (!asyncExpression) {
-    this.whenExpression = 'true';
-    this.runAsyncMethod = expressions.parse(whenExpression);
-  } else {
-    this.whenExpression = whenExpression;
-    this.runAsyncMethod = expressions.parse(asyncExpression);
+    asyncExpression = whenExpression;
+    whenExpression = 'true';
   }
+
+  this.whenExpression = whenExpression;
+  this.asyncExpression = asyncExpression;
 }
 
 
 ComputedProperty.extend(AsyncProperty, {
 
   addTo: function(observations, computedObject, propertyName) {
+    if (!this.runAsyncMethod) {
+      this.runAsyncMethod = observations.getExpression(this.asyncExpression);
+    }
+
     return observations.createObserver(this.whenExpression, function(value) {
       if (value) {
         var promise = this.runAsyncMethod.call(computedObject);
