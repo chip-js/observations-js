@@ -1,6 +1,5 @@
 module.exports = MapProperty;
 var ComputedProperty = require('./computed-property');
-var expressions = require('expressions-js');
 
 /**
  * Creates an object hash with the key being the value of the `key` property of each item in `sourceExpression` and the
@@ -8,14 +7,13 @@ var expressions = require('expressions-js');
  * can resolve to an array or an object hash.
  * @param {Array|Object} sourceExpression An array or object whose members will be added to the map.
  * @param {String} keyExpression The name of the property to key against as values are added to the map.
- *                               Defaults to "id"
  * @param {String} resultExpression [Optional] The expression evaluated against the array/object member whose value is
  *                                  added to the map. If not provided, the member will be added.
  * @return {Object} The object map of key=>value
  */
 function MapProperty(sourceExpression, keyExpression, resultExpression, removeExpression) {
   this.sourceExpression = sourceExpression;
-  this.getKey = expressions.parse(keyExpression);
+  this.keyExpression = keyExpression;
   this.resultExpression = resultExpression;
   this.removeExpression = removeExpression;
 }
@@ -33,6 +31,10 @@ ComputedProperty.extend(MapProperty, {
   },
 
   addItem: function(observations, computedObject, map, observers, item) {
+    if (!this.getKey) {
+      this.getKey = observations.getExpression(this.keyExpression);
+    }
+
     var key = item && this.getKey.call(item);
     if (!key) {
       return;
