@@ -41,7 +41,7 @@ ComputedProperty.extend(MapProperty, {
     }
 
     if (key in observers) {
-      removeObserver(observers, key);
+      this.removeObserver(observers, key);
     }
 
     if (this.resultExpression) {
