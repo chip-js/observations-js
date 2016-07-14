@@ -2,7 +2,7 @@ var ComputedProperty = require('./computed-properties/computed-property');
 var ExprProperty = require('./computed-properties/expr');
 var MapProperty = require('./computed-properties/map');
 var IfProperty = require('./computed-properties/if');
-var AsyncProperty = require('./computed-properties/async');
+var WhenProperty = require('./computed-properties/when');
 
 
 exports.create = function(observations) {
@@ -100,17 +100,18 @@ exports.create = function(observations) {
 
 
   /**
-   * Calls the async expression and assigns the results to the object's property when the `whenExpression` changes value
-   * to anything other than a falsey value such as undefined. The return value of the async expression should be a
-   * Promise.
-   * @param {String} whenExpression The conditional expression use to determine when to call the `asyncExpression`
-   * @param {String} asyncExpression The expression which will be executed when the `when` value changes and the result of
-   * the returned promise is set on the object.
+   * Calls the `thenExpression` and assigns the results to the object's property when the `whenExpression` changes value
+   * to anything other than a falsey value such as undefined. The return value of the `thenExpression` may be a Promise.
+   * @param {String} whenExpression The conditional expression use to determine when to call the `thenExpression`
+   * @param {String} thenExpression The expression which will be executed when the `when` value changes and the result
+   * (or the result of the returned promise) is set on the object.
    * @return {ComputedProperty}
    */
-  computed.async = function(whenExpression, asyncExpression) {
-    return new AsyncProperty(whenExpression, asyncExpression);
+  computed.when = function(whenExpression, thenExpression) {
+    return new WhenProperty(whenExpression, thenExpression);
   };
+  // Alias when to async for readability and backwards compatability
+  computed.async = computed.when;
 
 
   // Make the ComputedProperty class available for extension
