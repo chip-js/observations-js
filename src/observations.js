@@ -5,6 +5,7 @@ var computed = require('./computed');
 var expressions = require('expressions-js');
 var requestAnimationFrame = global.requestAnimationFrame || setTimeout;
 var cancelAnimationFrame = global.cancelAnimationFrame || clearTimeout;
+var resyncingObservers = new WeakMap();
 
 
 function Observations() {
@@ -14,10 +15,8 @@ function Observations() {
   this.callbacks = [];
   this.listeners = [];
   this.syncing = false;
+  this.currentIndex = -1;
   this.callbacksRunning = false;
-  this.rerun = false;
-  this.cycles = 0;
-  this.maxCycles = 10;
   this.timeout = null;
   this.pendingSync = null;
   this.syncNow = this.syncNow.bind(this);
@@ -160,52 +159,55 @@ Class.extend(Observations, {
     cancelAnimationFrame(this.pendingSync);
     this.pendingSync = null;
 
-    if (this.syncing) {
-      this.rerun = true;
-      return false;
-    }
-
     this.runSync();
     return true;
   },
 
 
   runSync: function() {
+    var callingObserver = this.currentIndex >= 0 ? this.observers[this.currentIndex] : null;
     this.syncing = true;
-    this.rerun = true;
-    this.cycles = 0;
+    var callbacks = this.callbacks;
+    this.callbacks = [];
+
+    if (callingObserver) {
+      resyncingObservers.set(callingObserver, true);
+    }
 
     var i, l;
 
-    // Allow callbacks to run the sync cycle again immediately, but stop at `maxCyles` (default 10) cycles so we don't
-    // run infinite loops
-    while (this.rerun) {
-      if (++this.cycles === this.maxCycles) {
-        throw new Error('Infinite observer syncing, an observer is calling Observer.sync() too many times');
+    // Allow observer callbacks to run the sync cycle again immediately, but only run the observers that aren't
+    // requesting the resync to avoid infinite recursion
+
+    for (i = 0; i < this.observers.length; i++) {
+      this.currentIndex = i;
+      var observer = this.observers[i];
+      if (!callingObserver || !resyncingObservers.has(observer)) {
+        observer.sync();
       }
-      this.rerun = false;
-      // the observer array may increase or decrease in size (remaining observers) during the sync
-      for (i = 0; i < this.observers.length; i++) {
-        this.observers[i].sync();
-      }
+      this.syncing = true;
+    }
+
+    if (callingObserver) {
+      resyncingObservers.delete(callingObserver);
     }
 
     this.callbacksRunning = true;
 
-    var callbacks = this.callbacks;
-    this.callbacks = [];
     while (callbacks.length) {
       callbacks.shift()();
     }
 
-    for (i = 0, l = this.listeners.length; i < l; i++) {
-      var listener = this.listeners[i];
-      listener();
+    if (callingObserver) {
+      // Only call listeners after the outer-most sync is finished
+      for (i = 0; i < this.listeners.length; i++) {
+        this.listeners[i]();
+      }
+      // Only set syncing to false once the outer-most sync is done
+      this.syncing = false;
     }
 
     this.callbacksRunning = false;
-    this.syncing = false;
-    this.cycles = 0;
   },
 
 
