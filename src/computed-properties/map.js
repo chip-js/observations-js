@@ -12,7 +12,9 @@ var ComputedProperty = require('./computed-property');
  * @return {Object} The object map of key=>value
  */
 function MapProperty(sourceExpression, keyExpression, resultExpression, removeExpression) {
-  this.sourceExpression = sourceExpression;
+  var parts = sourceExpression.split(/\s+in\s+/);
+  this.sourceExpression = parts.pop();
+  this.itemName = parts.pop();
   this.keyExpression = keyExpression;
   this.resultExpression = resultExpression;
   this.removeExpression = removeExpression;
@@ -35,12 +37,21 @@ ComputedProperty.extend(MapProperty, {
       this.getKey = observations.getExpression(this.keyExpression);
     }
 
-    var key = item && this.getKey.call(item);
+    var proxy;
+    if (this.itemName) {
+      proxy = Object.create(computedObject);
+      proxy[this.itemName] = item;
+    } else {
+      proxy = Object.create(item);
+      proxy.$$ = computedObject;
+    }
+
+    var key = item && this.getKey.call(proxy);
     if (!key) {
       return;
     }
 
-    if (key in observers) {
+    if (observers.hasOwnProperty(key)) {
       this.removeObserver(observers, key);
     }
 
@@ -50,8 +61,6 @@ ComputedProperty.extend(MapProperty, {
         throw new TypeError('Invalid resultExpression for computed.map');
       }
 
-      var proxy = Object.create(item);
-      proxy.$$ = computedObject;
       observer.bind(proxy);
       observers[key] = observer;
     } else {
