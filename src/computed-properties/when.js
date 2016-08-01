@@ -22,14 +22,14 @@ function WhenProperty(whenExpression, thenExpression) {
 
 ComputedProperty.extend(WhenProperty, {
 
-  addTo: function(observations, computedObject, propertyName) {
+  addTo: function(observations, computedObject, propertyName, context) {
     if (!this.thenMethod) {
       this.thenMethod = observations.getExpression(this.thenExpression);
     }
 
     return observations.createObserver(this.whenExpression, function(value) {
       if (value) {
-        var result = this.thenMethod.call(computedObject);
+        var result = this.thenMethod.call(context);
         if (result && result.then) {
           result.then(function(value) {
             computedObject[propertyName] = value;

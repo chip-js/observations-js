@@ -15,12 +15,12 @@ function IfProperty(ifExpression, thenExpression) {
 
 ComputedProperty.extend(IfProperty, {
 
-  addTo: function(observations, computedObject, propertyName) {
-    var observer = this.watch(observations, this.thenExpression, computedObject, propertyName);
+  addTo: function(observations, computedObject, propertyName, context) {
+    var observer = this.watch(observations, this.thenExpression, computedObject, propertyName, context);
 
     return observations.createObserver(this.ifExpression, function(value) {
       if (value && !observer.context) {
-        observer.bind(computedObject);
+        observer.bind(context);
       } else if (!value && observer.context) {
         observer.unbind();
         observer.sync();

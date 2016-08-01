@@ -23,27 +23,27 @@ function MapProperty(sourceExpression, keyExpression, resultExpression, removeEx
 
 ComputedProperty.extend(MapProperty, {
 
-  addTo: function(observations, computedObject, propertyName) {
+  addTo: function(observations, computedObject, propertyName, context) {
     var map = {};
     var observers = {};
     computedObject[propertyName] = map;
-    var add = this.addItem.bind(this, observations, computedObject, map, observers);
-    var remove = this.removeItem.bind(this, observations, computedObject, map, observers);
+    var add = this.addItem.bind(this, observations, computedObject, map, observers, context);
+    var remove = this.removeItem.bind(this, observations, computedObject, map, observers, context);
     return observations.observeMembers(this.sourceExpression, add, remove, this);
   },
 
-  addItem: function(observations, computedObject, map, observers, item) {
+  addItem: function(observations, computedObject, map, observers, context, item) {
     if (!this.getKey) {
       this.getKey = observations.getExpression(this.keyExpression);
     }
 
     var proxy;
     if (this.itemName) {
-      proxy = Object.create(computedObject);
+      proxy = Object.create(context);
       proxy[this.itemName] = item;
     } else {
       proxy = Object.create(item);
-      proxy.$$ = computedObject;
+      proxy.$$ = context;
     }
 
     var key = item && this.getKey.call(proxy);
@@ -56,7 +56,7 @@ ComputedProperty.extend(MapProperty, {
     }
 
     if (this.resultExpression) {
-      var observer = this.watch(observations, this.resultExpression, map, key);
+      var observer = this.watch(observations, this.resultExpression, map, key, proxy);
       if (!observer) {
         throw new TypeError('Invalid resultExpression for computed.map');
       }
@@ -68,12 +68,12 @@ ComputedProperty.extend(MapProperty, {
     }
   },
 
-  removeItem: function(observations, computedObject, map, observers, item) {
+  removeItem: function(observations, computedObject, map, observers, context, item) {
     var key = item && this.getKey.call(item);
     if (key) {
       this.removeObserver(observers, key);
       if (this.removeExpression) {
-        observations.get(computedObject, this.removeExpression);
+        observations.get(context, this.removeExpression);
       }
       delete map[key];
     }

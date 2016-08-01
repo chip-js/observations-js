@@ -14,7 +14,7 @@ function ExprProperty(expression) {
 
 ComputedProperty.extend(ExprProperty, {
 
-  addTo: function(observations, computedObject, propertyName) {
-    return this.watch(observations, this.expression, computedObject, propertyName);
+  addTo: function(observations, computedObject, propertyName, context) {
+    return this.watch(observations, this.expression, computedObject, propertyName, context);
   }
 });

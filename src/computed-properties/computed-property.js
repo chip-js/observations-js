@@ -19,11 +19,11 @@ Class.extend(ComputedProperty, {
    * @param {String} propertyName The name of the property on the object that will be set
    * @return {Observer} An observer which can be bound to the computed object
    */
-  addTo: function(computedObject, propertyName) {
+  addTo: function(observations, computedObject, propertyName, context) {
     throw new Error('Abstract function is not implemented');
   },
 
-  watch: function(observations, expression, obj, property) {
+  watch: function(observations, expression, obj, property, context) {
     if (typeof expression === 'string') {
       // This is a computed expression
       return observations.createObserver(expression, function(value) {
@@ -35,7 +35,7 @@ Class.extend(ComputedProperty, {
       });
     } else if (expression.isComputedProperty) {
       // Add ComputedProperty's observer to the observers and bind if enabled
-      return expression.addTo(observations, obj, property);
+      return expression.addTo(observations, obj, property, context);
     }
   }
 });
