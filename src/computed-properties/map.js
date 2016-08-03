@@ -29,7 +29,7 @@ ComputedProperty.extend(MapProperty, {
     computedObject[propertyName] = map;
     var add = this.addItem.bind(this, observations, computedObject, map, observers, context);
     var remove = this.removeItem.bind(this, observations, computedObject, map, observers, context);
-    return observations.observeMembers(this.sourceExpression, add, remove, this);
+    return observations.createMemberObserver(this.sourceExpression, add, remove, this);
   },
 
   addItem: function(observations, computedObject, map, observers, context, item) {

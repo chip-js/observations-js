@@ -32,6 +32,9 @@ exports.create = function(observations) {
    * @return {Object} Returns the object passed in
    */
   computed.extend = function(obj, map, options) {
+    if (!obj || !map) {
+      throw new TypeError('computed.extend expects `obj` and `map` to be objects');
+    }
     ensureObservers(obj, options);
 
     Object.keys(map).forEach(function(property) {

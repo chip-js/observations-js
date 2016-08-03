@@ -30,58 +30,99 @@ Class.extend(Observations, {
 
   /**
    * Observes any changes to the result of the expression on the context object and calls the callback.
+   * @param {Object} context The context to bind the expression against
+   * @param {String} expression The expression to observe
+   * @param {Function} onChange The function which will be called when the expression value changes
+   * @return {Observer} The observer created
    */
-  observe: function(context, expression, callback, callbackContext) {
-    var observer = this.createObserver(expression, callback, callbackContext);
+  watch: function(context, expression, onChange, callbackContext) {
+    var observer = this.createObserver(expression, onChange, callbackContext || context);
     observer.bind(context);
     return observer;
+  },
+
+  // Alias for `watch`, DEPRECATED
+  observe: function(context, expression, onChange, callbackContext) {
+    return this.watch(context, expression, onChange, callbackContext);
+  },
+
+  /**
+   * Observe an expression and call `onAdd` and `onRemove` whenever a member is added/removed from the array or object.
+   * @param {Object} context The context to bind the expression against
+   * @param {String} expression The expression to observe
+   * @param {Function} onAdd The function which will be called when a member is added to the source
+   * @param {Function} onRemove The function which will be called when a member is removed from the source
+   * @return {Observer} The observer created
+   */
+  track: function(context, expression, onAdd, onRemove, callbackContext) {
+    var observer = this.createMemberObserver(expression, onAdd, onRemove, callbackContext);
+    observer.bind(context);
+    return observer;
+  },
+
+  // Alias for `createMemberObserver`, DEPRECATED
+  observeMembers: function(expression, onAdd, onRemove, callbackContext) {
+    return this.createMemberObserver(expression, onAdd, onRemove, callbackContext);
   },
 
   /**
    * Creates a new observer attached to this observations object. When the observer is bound to a context it will be
    * added to this `observations` and synced when this `observations.sync` is called.
+   * @param {String} expression The expression to observe
+   * @param {Function} callback The function which will be called when the expression value changes
+   * @return {Observer} The observer
    */
   createObserver: function(expression, callback, callbackContext) {
     return new Observer(this, expression, callback, callbackContext);
   },
 
   /**
-   * Observe an expression and trigger `onAdd` and `onRemove` whenever a member is added/removed from the array or object.
+   * Observe an expression and call `onAdd` and `onRemove` whenever a member is added/removed from the array or object.
+   * @param {String} expression The expression to observe
    * @param {Function} onAdd The function which will be called when a member is added to the source
    * @param {Function} onRemove The function which will be called when a member is removed from the source
-   * @return {Observer} The observer for observing the source. Bind against a source object.
+   * @return {Observer} The observer
    */
-  observeMembers: function(expression, onAdd, onRemove, callbackContext) {
+  createMemberObserver: function(expression, onAdd, onRemove, callbackContext) {
     if (!onAdd) onAdd = function(){};
     if (!onRemove) onRemove = function(){};
 
     var observer = this.createObserver(expression, function(source, oldValue, changes) {
       if (changes) {
         changes.forEach(function(change) {
-          if (change.removed) {
+          if (change.type === 'splice') {
             change.removed.forEach(onRemove, callbackContext);
             source.slice(change.index, change.index + change.addedCount).forEach(onAdd, callbackContext);
-          } else if (change.type === 'add') {
-            onAdd.call(callbackContext, source[change.name]);
-          } else if (change.type === 'update') {
-            onRemove.call(callbackContext, change.oldValue);
-            onAdd.call(callbackContext, source[change.name]);
-          } else if (change.type === 'delete') {
-            onRemove.call(callbackContext, change.oldValue);
+          } else {
+            var value = source[change.name];
+            if (value == null && change.oldValue != null) {
+              onRemove.call(callbackContext, change.oldValue);
+            } else if (value != null && change.oldValue == null) {
+              onAdd.call(callbackContext, value);
+            } else if (value != null && change.oldValue != null) {
+              onRemove.call(callbackContext, change.oldValue);
+              onAdd.call(callbackContext, value);
+            }
           }
         });
       } else if (Array.isArray(source)) {
         source.forEach(onAdd, callbackContext);
       } else if (source && typeof source === 'object') {
         Object.keys(source).forEach(function(key) {
-          onAdd.call(callbackContext, source[key]);
+          var value = source[key];
+          if (value != null) {
+            onAdd.call(callbackContext, value);
+          }
         });
       } else if (Array.isArray(oldValue)) {
         oldValue.forEach(onRemove, callbackContext);
       } else if (oldValue && typeof oldValue === 'object') {
         // If undefined (or something that isn't an array/object) remove the observers
         Object.keys(oldValue).forEach(function(key) {
-          onRemove.call(callbackContext, oldValue[key]);
+          var value = oldValue[key];
+          if (value != null) {
+            onRemove.call(callbackContext, value);
+          }
         });
       }
     });
