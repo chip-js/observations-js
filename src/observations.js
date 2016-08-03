@@ -2,6 +2,7 @@ module.exports = Observations;
 var Class = require('chip-utils/class');
 var Observer = require('./observer');
 var computed = require('./computed');
+var ObservableHash = require('./observable-hash');
 var expressions = require('expressions-js');
 var requestAnimationFrame = global.requestAnimationFrame || setTimeout;
 var cancelAnimationFrame = global.cancelAnimationFrame || clearTimeout;
@@ -27,6 +28,14 @@ function Observations() {
 
 
 Class.extend(Observations, {
+
+  /**
+   * Creates a new ObservableHash with useful methods for managing data using watch, track, and computed.
+   * @return {ObservableHash} An object for putting your data on for accessibility
+   */
+  createHash: function() {
+    return new ObservableHash(this);
+  },
 
   /**
    * Observes any changes to the result of the expression on the context object and calls the callback.
