@@ -106,18 +106,24 @@ Class.extend(Observations, {
 
     var observer = this.createObserver(expression, function(source, oldValue, changes) {
       if (changes) {
+        // call onRemoved on everything first
         changes.forEach(function(change) {
           if (change.type === 'splice') {
             change.removed.forEach(onRemove, callbackContext);
+          } else {
+            if (change.oldValue != null) {
+              onRemove.call(callbackContext, change.oldValue);
+            }
+          }
+        });
+
+        // call onAdded second, allowing for items that changed location to be accurately processed
+        changes.forEach(function(change) {
+          if (change.type === 'splice') {
             source.slice(change.index, change.index + change.addedCount).forEach(onAdd, callbackContext);
           } else {
             var value = source[change.name];
-            if (value == null && change.oldValue != null) {
-              onRemove.call(callbackContext, change.oldValue);
-            } else if (value != null && change.oldValue == null) {
-              onAdd.call(callbackContext, value);
-            } else if (value != null && change.oldValue != null) {
-              onRemove.call(callbackContext, change.oldValue);
+            if (value != null) {
               onAdd.call(callbackContext, value);
             }
           }
