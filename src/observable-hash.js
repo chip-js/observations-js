@@ -77,9 +77,8 @@ Class.extend(ObservableHash, {
 
   /**
    * Watch this object for changes in the value of the expression
-   * @param {[type]} expression      [description]
-   * @param {[type]} onChange        [description]
-   * @param {[type]} callbackContext [description]
+   * @param {String} expression The expression to observe
+   * @param {Function} onChange The function which will be called when the expression value changes
    * @return {Observer} The observer created
    */
   watch: function(expression, onChange, callbackContext) {

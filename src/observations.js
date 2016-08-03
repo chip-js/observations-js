@@ -36,10 +36,13 @@ Class.extend(Observations, {
 
   /**
    * Creates a new ObservableHash with useful methods for managing data using watch, track, and computed.
+   * @param {Object} computedMap [OPTIONAL] An initial computed map for this hash
    * @return {ObservableHash} An object for putting your data on for accessibility
    */
-  createHash: function() {
-    return new ObservableHash(this);
+  createHash: function(computedMap) {
+    var hash = new ObservableHash(this);
+    if (computedMap) hash.addComputed(computedMap);
+    return hash;
   },
 
   /**
