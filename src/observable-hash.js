@@ -28,10 +28,10 @@ Class.extend(ObservableHash, {
    * and all computed properties will be cleared out with `undefined`. The hash will be ready for garbage collection.
    * @return {Boolean} If the hash is enabled, default `true`
    */
-  get enabled() {
+  get observersEnabled() {
     return this._observers.enabled;
   },
-  set enabled(value) {
+  set observersEnabled(value) {
     if (this.enabled === value) return;
     this._observers.enabled = value;
     if (value) {
@@ -78,7 +78,7 @@ Class.extend(ObservableHash, {
   watch: function(expression, onChange, callbackContext) {
     var observer = this.observations.createObserver(expression, onChange, callbackContext || this);
     this._observers.push(observer);
-    if (this.enabled) observer.bind(this);
+    if (this.observersEnabled) observer.bind(this);
     return observer;
   },
 
@@ -95,7 +95,7 @@ Class.extend(ObservableHash, {
     }
     var observer = this.observations.createMemberObserver(expression, onAdd, onRemove, callbackContext || this);
     this._observers.push(observer);
-    if (this.enabled) observer.bind(this);
+    if (this.observersEnabled) observer.bind(this);
     return observer;
   },
 
@@ -179,7 +179,7 @@ Class.extend(ObservableHash, {
 
     var observer = observations.observeMembers(steps[0], addedCallbacks[0], removedCallbacks[0]);
     this._observers.push(observer);
-    if (this.enabled) observer.bind(this);
+    if (this.observersEnabled) observer.bind(this);
     return observer;
   }
 
