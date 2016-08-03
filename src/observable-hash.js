@@ -7,14 +7,14 @@ var deepDelimiter = /(?:\[\]|\{\})\.?/i;
  * changes.
  * @param {Observations} observations An instance of the Observations class this has is bound to
  */
-function ObservableHash(observations, _observers) {
+function ObservableHash(observations) {
   var enabled = true;
-  if (!_observers) _observers = [];
+  var _observers = [];
   _observers.enabled = true;
 
   Object.defineProperties(this, {
     _observations: { value: observations },
-    _computed: { value: observations.computed },
+    _namespaces: { value: [] },
     _observers: { value: _observers },
     computedObservers: { value: _observers } // alias to work with the computed system
   });
@@ -34,16 +34,23 @@ Class.extend(ObservableHash, {
   set observersEnabled(value) {
     if (this.enabled === value) return;
     this._observers.enabled = value;
+
+    // Bind/unbind the observers for this hash
     if (value) {
       this._observers.forEach(function(observer) {
-        observer.bind(obj);
-      });
+        observer.bind(this);
+      }, this);
     } else {
       this._observers.forEach(function(observer) {
         observer.unbind();
         observer.sync();
       });
     }
+
+    // Set namespaced hashes to the same value
+    this._namespaces.forEach(function(namespace) {
+      this[namespace].observersEnabled = value;
+    }, this);
   },
 
   /**
@@ -55,13 +62,13 @@ Class.extend(ObservableHash, {
   addComputed: function(namespace, map) {
     if (typeof namespace === 'string' && typeof map === 'object') {
       if (!this[namespace]) {
-        this[namespace] = new ObservableHash(this._observations, this._observers);
-        // Put all the observers together into one array for enabling/disabling them all together
-        Object.defineProperty(this[namespace], 'computedObservers', { value: this._observers });
+        this[namespace] = new ObservableHash(this._observations);
+        this[namespace].observersEnabled = this.observersEnabled;
+        this._namespaces.push(namespace);
       }
-      this._computed.extend(this[namespace], map);
+      this._observations.computed.extend(this[namespace], map);
     } else if (namespace && typeof namespace === 'object') {
-      this._computed.extend(this, namespace);
+      this._observations.computed.extend(this, namespace);
     } else {
       throw new TypeError('addComputed must have a map object');
     }

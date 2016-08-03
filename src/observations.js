@@ -9,6 +9,12 @@ var cancelAnimationFrame = global.cancelAnimationFrame || clearTimeout;
 
 
 function Observations() {
+  // Bind all methods to this instance
+  Object.getOwnPropertyNames(this.constructor.prototype).forEach(function(name) {
+    if (typeof this[name] === 'function') {
+      this[name] = this[name].bind(this);
+    }
+  }, this);
   this.globals = {};
   this.formatters = {};
   this.observers = [];
@@ -21,7 +27,6 @@ function Observations() {
   this.maxCycles = 10;
   this.timeout = null;
   this.pendingSync = null;
-  this.syncNow = this.syncNow.bind(this);
   this.computed = computed.create(this);
   this.expressions = expressions;
 }
