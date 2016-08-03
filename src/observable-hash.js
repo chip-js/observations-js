@@ -13,8 +13,8 @@ function ObservableHash(observations, _observers) {
   _observers.enabled = true;
 
   Object.defineProperties(this, {
-    observations: { value: observations },
-    computed: { value: observations.computed },
+    _observations: { value: observations },
+    _computed: { value: observations.computed },
     _observers: { value: _observers },
     computedObservers: { value: _observers } // alias to work with the computed system
   });
@@ -55,13 +55,13 @@ Class.extend(ObservableHash, {
   addComputed: function(namespace, map) {
     if (typeof namespace === 'string' && typeof map === 'object') {
       if (!this[namespace]) {
-        this[namespace] = new ObservableHash(observations, this._observers);
+        this[namespace] = new ObservableHash(this._observations, this._observers);
         // Put all the observers together into one array for enabling/disabling them all together
         Object.defineProperty(this[namespace], 'computedObservers', { value: this._observers });
       }
-      this.computed.extend(this[namespace], map);
+      this._computed.extend(this[namespace], map);
     } else if (namespace && typeof namespace === 'object') {
-      this.computed.extend(this, namespace);
+      this._computed.extend(this, namespace);
     } else {
       throw new TypeError('addComputed must have a map object');
     }
@@ -76,7 +76,7 @@ Class.extend(ObservableHash, {
    * @return {Observer} The observer created
    */
   watch: function(expression, onChange, callbackContext) {
-    var observer = this.observations.createObserver(expression, onChange, callbackContext || this);
+    var observer = this._observations.createObserver(expression, onChange, callbackContext || this);
     this._observers.push(observer);
     if (this.observersEnabled) observer.bind(this);
     return observer;
@@ -93,7 +93,7 @@ Class.extend(ObservableHash, {
     if (deepDelimiter.test(expression)) {
       return this.trackDeeply(expression, onAdd, onRemove, callbackContext);
     }
-    var observer = this.observations.createMemberObserver(expression, onAdd, onRemove, callbackContext || this);
+    var observer = this._observations.createMemberObserver(expression, onAdd, onRemove, callbackContext || this);
     this._observers.push(observer);
     if (this.observersEnabled) observer.bind(this);
     return observer;
@@ -121,7 +121,7 @@ Class.extend(ObservableHash, {
       return this.track(expression, onAdd, onRemove, callbackContext);
     }
     var observers = new WeakMap();
-    var observations = this.observations;
+    var observations = this._observations;
     var steps = expression.split(deepDelimiter);
     var lastIndex = steps.length - 1;
 
