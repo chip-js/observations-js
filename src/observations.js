@@ -314,10 +314,8 @@ Class.extend(Observations, {
     this.observers.push(observer);
     if (!skipUpdate) {
       observer.forceUpdateNextSync = true;
-    } else {
-      observer.skipNextSync();
+      observer.sync();
     }
-    observer.sync();
   },
 
 
