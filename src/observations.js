@@ -109,10 +109,12 @@ Class.extend(Observations, {
         // call onRemoved on everything first
         changes.forEach(function(change) {
           if (change.type === 'splice') {
-            change.removed.forEach(onRemove, callbackContext);
+            change.removed.forEach(function(item, index) {
+              onRemove(item, index + change.index);
+            }, callbackContext);
           } else {
             if (change.oldValue != null) {
-              onRemove.call(callbackContext, change.oldValue);
+              onRemove.call(callbackContext, change.oldValue, change.name);
             }
           }
         });
@@ -120,11 +122,13 @@ Class.extend(Observations, {
         // call onAdded second, allowing for items that changed location to be accurately processed
         changes.forEach(function(change) {
           if (change.type === 'splice') {
-            source.slice(change.index, change.index + change.addedCount).forEach(onAdd, callbackContext);
+            source.slice(change.index, change.index + change.addedCount).forEach(function(item, index) {
+              onAdd(item, index + change.index);
+            }, callbackContext);
           } else {
             var value = source[change.name];
             if (value != null) {
-              onAdd.call(callbackContext, value);
+              onAdd.call(callbackContext, value, change.name);
             }
           }
         });
@@ -134,7 +138,7 @@ Class.extend(Observations, {
         Object.keys(source).forEach(function(key) {
           var value = source[key];
           if (value != null) {
-            onAdd.call(callbackContext, value);
+            onAdd.call(callbackContext, value, key);
           }
         });
       } else if (Array.isArray(oldValue)) {
@@ -144,7 +148,7 @@ Class.extend(Observations, {
         Object.keys(oldValue).forEach(function(key) {
           var value = oldValue[key];
           if (value != null) {
-            onRemove.call(callbackContext, value);
+            onRemove.call(callbackContext, value, key);
           }
         });
       }

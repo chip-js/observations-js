@@ -149,7 +149,8 @@ Class.extend(ObservableHash, {
         var observer = observations.observeMembers(
           expr || 'this',
           addedCallbacks[index + 1],
-          removedCallbacks[index + 1]
+          removedCallbacks[index + 1],
+          callbackContext
         );
         observers.set(item, observer);
         observer.bind(item);
@@ -165,14 +166,14 @@ Class.extend(ObservableHash, {
     // Add last callback
     if (steps[lastIndex]) {
       // Observe the item's property
-      addedCallbacks.push(function(item) {
+      addedCallbacks.push(function(item, key) {
         if (!item) return;
         var observer = observations.createObserver(steps[lastIndex], function(value, oldValue) {
           if (oldValue != null && typeof onRemove === 'function') {
-            onRemove(oldValue);
+            onRemove.call(callbackContext, oldValue, key);
           }
           if (value != null && typeof onAdd === 'function') {
-            onAdd(value);
+            onAdd.call(callbackContext, value, key);
           }
         });
         observers.set(item, observer);
@@ -184,7 +185,7 @@ Class.extend(ObservableHash, {
       removedCallbacks[lastIndex] = onRemove;
     }
 
-    var observer = observations.observeMembers(steps[0], addedCallbacks[0], removedCallbacks[0]);
+    var observer = observations.observeMembers(steps[0], addedCallbacks[0], removedCallbacks[0], callbackContext);
     this._observers.push(observer);
     if (this.observersEnabled) observer.bind(this);
     return observer;
