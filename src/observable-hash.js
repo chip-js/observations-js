@@ -67,12 +67,13 @@ Class.extend(ObservableHash, {
         this._namespaces.push(namespace);
       }
       this._observations.computed.extend(this[namespace], map);
+      return this[namespace];
     } else if (namespace && typeof namespace === 'object') {
       this._observations.computed.extend(this, namespace);
+      return this;
     } else {
       throw new TypeError('addComputed must have a map object');
     }
-    return this;
   },
 
   /**
