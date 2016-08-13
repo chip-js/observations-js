@@ -33,6 +33,7 @@ function Observations() {
 
 
 Class.extend(Observations, {
+  ObservableHash: ObservableHash,
 
   /**
    * Creates a new ObservableHash with useful methods for managing data using watch, track, and computed.

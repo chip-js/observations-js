@@ -54,6 +54,24 @@ Class.extend(ObservableHash, {
   },
 
   /**
+   * Get the value of an expression
+   * @param {String} expression The JavaScript expression to evaluate
+   * @return {mixed} The value of the expression
+   */
+  get: function(expression) {
+    return this._observations.get(this, expression);
+  },
+
+  /**
+   * Set the value of an expression
+   * @param {String} expression The JavaScript expression to set
+   * @param {mixed} value The value you'd like to set the expression to
+   */
+  set: function(expression, value) {
+    return this._observations.set(this, expression, value);
+  },
+
+  /**
    * Add computed properties to this hash. If `name` is provided it will add the computed properties to that namespace
    * on the hash. Otherwise they will be added directly to the hash.
    * @param {String} name [OPTIONAL] The namespace to add the computed properties under
