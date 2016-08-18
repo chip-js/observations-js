@@ -13,6 +13,7 @@ function ObservableHash(observations) {
   _observers.enabled = true;
 
   Object.defineProperties(this, {
+    _context: { writable: true, value: this },
     _observations: { value: observations },
     _namespaces: { value: [] },
     _observers: { value: _observers },
@@ -38,7 +39,7 @@ Class.extend(ObservableHash, {
     // Bind/unbind the observers for this hash
     if (value) {
       this._observers.forEach(function(observer) {
-        observer.bind(this);
+        observer.bind(this._context);
       }, this);
     } else {
       this._observers.forEach(function(observer) {
@@ -59,7 +60,7 @@ Class.extend(ObservableHash, {
    * @return {mixed} The value of the expression
    */
   get: function(expression) {
-    return this._observations.get(this, expression);
+    return this._observations.get(this._context, expression);
   },
 
   /**
@@ -68,7 +69,7 @@ Class.extend(ObservableHash, {
    * @param {mixed} value The value you'd like to set the expression to
    */
   set: function(expression, value) {
-    return this._observations.set(this, expression, value);
+    return this._observations.set(this._context, expression, value);
   },
 
   /**
@@ -84,10 +85,10 @@ Class.extend(ObservableHash, {
         this[namespace].observersEnabled = this.observersEnabled;
         this._namespaces.push(namespace);
       }
-      this._observations.computed.extend(this[namespace], map);
+      this._observations.computed.extend(this[namespace], map, { context: this._context });
       return this[namespace];
     } else if (namespace && typeof namespace === 'object') {
-      this._observations.computed.extend(this, namespace);
+      this._observations.computed.extend(this, namespace, { context: this._context });
       return this;
     } else {
       throw new TypeError('addComputed must have a map object');
@@ -103,7 +104,7 @@ Class.extend(ObservableHash, {
   watch: function(expression, onChange, callbackContext) {
     var observer = this._observations.createObserver(expression, onChange, callbackContext || this);
     this._observers.push(observer);
-    if (this.observersEnabled) observer.bind(this);
+    if (this.observersEnabled) observer.bind(this._context);
     return observer;
   },
 
@@ -120,7 +121,7 @@ Class.extend(ObservableHash, {
     }
     var observer = this._observations.createMemberObserver(expression, onAdd, onRemove, callbackContext || this);
     this._observers.push(observer);
-    if (this.observersEnabled) observer.bind(this);
+    if (this.observersEnabled) observer.bind(this._context);
     return observer;
   },
 
@@ -205,7 +206,7 @@ Class.extend(ObservableHash, {
 
     var observer = observations.observeMembers(steps[0], addedCallbacks[0], removedCallbacks[0], callbackContext);
     this._observers.push(observer);
-    if (this.observersEnabled) observer.bind(this);
+    if (this.observersEnabled) observer.bind(this._context);
     return observer;
   }
 

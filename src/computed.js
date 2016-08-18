@@ -56,7 +56,7 @@ exports.create = function(observations) {
       if (observer) {
         obj.computedObservers.push(observer);
         if (obj.computedObservers.enabled) {
-          observer.bind(obj);
+          observer.bind(options && options.context || obj);
         }
       }
     });
@@ -142,7 +142,7 @@ function ensureObservers(obj, options) {
       if (!this.enabled) {
         this.enabled = true;
         this.forEach(function(observer) {
-          observer.bind(obj);
+          observer.bind(options && options.context || obj);
         });
       }
     };
