@@ -33,24 +33,39 @@ Class.extend(ObservableHash, {
     return this._observers.enabled;
   },
   set observersEnabled(value) {
-    if (this.enabled === value) return;
-    this._observers.enabled = value;
-
     // Bind/unbind the observers for this hash
-    if (value) {
-      this._observers.forEach(function(observer) {
-        observer.bind(this._context);
-      }, this);
-    } else {
-      this._observers.forEach(function(observer) {
-        observer.unbind();
-        observer.sync();
-      });
-    }
+    value ? this.observersStart() : this.observersStop(true);
+  },
+
+  /**
+   * Starts the observers watching their values
+   */
+  observersStart: function() {
+    this._observers.enabled = true;
+    this._observers.forEach(function(observer) {
+      observer.bind(this._context);
+    }, this);
 
     // Set namespaced hashes to the same value
     this._namespaces.forEach(function(namespace) {
-      this[namespace].observersEnabled = value;
+      this[namespace].observersResume();
+    }, this);
+  },
+
+  /**
+   * Stops the observers watching and responding to changes, optionally clearing out the values
+   * @param {Boolean} clearValues Whether to clear the values out to `undefined` or leave them as-is
+   */
+  observersStop: function(clearValues) {
+    this._observers.enabled = false;
+    this._observers.forEach(function(observer) {
+      observer.unbind();
+      if (clearValues) observer.sync();
+    });
+
+    // Set namespaced hashes to the same value
+    this._namespaces.forEach(function(namespace) {
+      this[namespace].observersPause(clearValues);
     }, this);
   },
 
