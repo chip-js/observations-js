@@ -100,7 +100,7 @@ Class.extend(ObservableHash, {
         this[namespace].observersEnabled = this.observersEnabled;
         this._namespaces.push(namespace);
       }
-      this._observations.computed.extend(this[namespace], map, { context: this._context });
+      this._observations.computed.extend(this[namespace], map, { context: this[namespace]._context });
       return this[namespace];
     } else if (namespace && typeof namespace === 'object') {
       this._observations.computed.extend(this, namespace, { context: this._context });
