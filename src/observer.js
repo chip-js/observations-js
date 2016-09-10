@@ -32,6 +32,17 @@ function Observer(observations, expression, callback, callbackContext) {
 
 Class.extend(Observer, {
 
+  get getChangeRecords() {
+    return this._getChangeRecords;
+  },
+
+  set getChangeRecords(value) {
+    this._getChangeRecords = Boolean(value);
+    if (value && this.oldValue) {
+      this.oldValue = diff.clone(this.oldValue);
+    }
+  },
+
   // Binds this expression to a given context
   bind: function(context, skipUpdate) {
     this.context = context;
