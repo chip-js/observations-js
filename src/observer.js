@@ -113,6 +113,15 @@ Class.extend(Observer, {
     // Don't call the callback if `skipNextSync` was called on the observer
     if (this.skip || !this.callback) {
       this.skip = false;
+
+      if (this.getChangeRecords) {
+        // Store an immutable version of the value, allowing for arrays and objects to change instance but not content and
+        // still refrain from dispatching callbacks (e.g. when using an object in bind-class or when using array formatters
+        // in bind-each)
+        this.oldValue = diff.clone(value);
+      } else {
+        this.oldValue = value;
+      }
     } else {
       var change;
       var useCompareBy = this.getChangeRecords &&
@@ -142,24 +151,25 @@ Class.extend(Observer, {
         changed = diff.basic(value, this.oldValue);
       }
 
+      var oldValue = this.oldValue;
+
+      if (this.getChangeRecords) {
+        // Store an immutable version of the value, allowing for arrays and objects to change instance but not content and
+        // still refrain from dispatching callbacks (e.g. when using an object in bind-class or when using array formatters
+        // in bind-each)
+        this.oldValue = diff.clone(value);
+      } else {
+        this.oldValue = value;
+      }
 
       // If an array has changed calculate the splices and call the callback.
       if (!changed && !this.forceUpdateNextSync) return;
       this.forceUpdateNextSync = false;
       if (Array.isArray(changed)) {
-        this.callback.call(this.callbackContext, value, this.oldValue, changed);
+        this.callback.call(this.callbackContext, value, oldValue, changed);
       } else {
-        this.callback.call(this.callbackContext, value, this.oldValue);
+        this.callback.call(this.callbackContext, value, oldValue);
       }
-    }
-
-    if (this.getChangeRecords) {
-      // Store an immutable version of the value, allowing for arrays and objects to change instance but not content and
-      // still refrain from dispatching callbacks (e.g. when using an object in bind-class or when using array formatters
-      // in bind-each)
-      this.oldValue = diff.clone(value);
-    } else {
-      this.oldValue = value;
     }
   }
 });
