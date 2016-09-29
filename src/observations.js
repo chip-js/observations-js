@@ -124,12 +124,12 @@ Class.extend(Observations, {
         changes.forEach(function(change) {
           if (change.type === 'splice') {
             source.slice(change.index, change.index + change.addedCount).forEach(function(item, index) {
-              onAdd(item, index + change.index);
+              onAdd(item, index + change.index, source);
             }, callbackContext);
           } else {
             var value = source[change.name];
             if (value != null) {
-              onAdd.call(callbackContext, value, change.name);
+              onAdd.call(callbackContext, value, change.name, source);
             }
           }
         });
@@ -139,7 +139,7 @@ Class.extend(Observations, {
         Object.keys(source).forEach(function(key) {
           var value = source[key];
           if (value != null) {
-            onAdd.call(callbackContext, value, key);
+            onAdd.call(callbackContext, value, key, source);
           }
         });
       } else if (Array.isArray(oldValue)) {
@@ -149,7 +149,7 @@ Class.extend(Observations, {
         Object.keys(oldValue).forEach(function(key) {
           var value = oldValue[key];
           if (value != null) {
-            onRemove.call(callbackContext, value, key);
+            onRemove.call(callbackContext, value, key, oldValue);
           }
         });
       }
