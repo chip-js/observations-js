@@ -161,6 +161,7 @@ Class.extend(ObservableHash, {
     if (!deepDelimiter.test(expression)) {
       return this.track(expression, onAdd, onRemove, callbackContext);
     }
+    callbackContext = callbackContext || this;
     var observers = new WeakMap();
     var observations = this._observations;
     var steps = expression.split(deepDelimiter);
