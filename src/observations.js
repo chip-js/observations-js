@@ -111,7 +111,10 @@ Class.extend(Observations, {
         changes.forEach(function(change) {
           if (change.type === 'splice') {
             change.removed.forEach(function(item, index) {
-              onRemove(item, index + change.index);
+              // Only call onRemove if this item was removed completely, not if it just changed location in the array
+              if (source.indexOf(item) === -1) {
+                onRemove(item, index + change.index);
+              }
             }, callbackContext);
           } else {
             if (change.oldValue != null) {
@@ -124,7 +127,10 @@ Class.extend(Observations, {
         changes.forEach(function(change) {
           if (change.type === 'splice') {
             source.slice(change.index, change.index + change.addedCount).forEach(function(item, index) {
-              onAdd(item, index + change.index, source);
+              // Only call onAdd if this item was added, not if it changed location in the array
+              if (oldValue.indexOf(item) === -1) {
+                onAdd(item, index + change.index, source);
+              }
             }, callbackContext);
           } else {
             var value = source[change.name];
