@@ -205,10 +205,10 @@ Class.extend(ObservableHash, {
         if (!item) return;
         var observer = observations.createObserver(steps[lastIndex], function(value, oldValue) {
           if (oldValue != null && typeof onRemove === 'function') {
-            onRemove.call(callbackContext, oldValue, key);
+            onRemove.call(callbackContext, oldValue, key, item);
           }
           if (value != null && typeof onAdd === 'function') {
-            onAdd.call(callbackContext, value, key);
+            onAdd.call(callbackContext, value, key, item);
           }
         });
         observers.set(item, observer);
