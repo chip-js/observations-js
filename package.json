@@ -1,6 +1,6 @@
 {
   "name": "observations-js",
-  "version": "0.2.49",
+  "version": "0.2.50",
   "description": "Observes simplified JavaScript expressions and triggers callbacks when the returned value changes.",
   "keywords": [
     "templates",
