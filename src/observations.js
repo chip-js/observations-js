@@ -113,7 +113,7 @@ Class.extend(Observations, {
             change.removed.forEach(function(item, index) {
               // Only call onRemove if this item was removed completely, not if it just changed location in the array
               if (source.indexOf(item) === -1) {
-                onRemove(item, index + change.index);
+                onRemove.call(callbackContext, item, index + change.index);
               }
             }, callbackContext);
           } else {
@@ -129,7 +129,7 @@ Class.extend(Observations, {
             source.slice(change.index, change.index + change.addedCount).forEach(function(item, index) {
               // Only call onAdd if this item was added, not if it changed location in the array
               if (oldValue.indexOf(item) === -1) {
-                onAdd(item, index + change.index, source);
+                onAdd.call(callbackContext, item, index + change.index, source);
               }
             }, callbackContext);
           } else {
