@@ -43,7 +43,7 @@ exports.create = function(observations) {
 
       if (typeof expression === 'string') {
         // This is a computed expression
-        observer = observations.createObserver(expression, (value) => {
+        observer = observations.createObserver(expression, function(value) {
           obj[property] = value;
         });
       } else if (expression && expression.isComputedProperty) {
