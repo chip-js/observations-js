@@ -29,6 +29,7 @@ function Observations() {
   this.pendingSync = null;
   this.computed = computed.create(this);
   this.expressions = expressions;
+  this.windows = [ window ];
 }
 
 
@@ -221,7 +222,8 @@ Class.extend(Observations, {
       return false;
     }
 
-    this.pendingSync = requestAnimationFrame(this.syncNow);
+    this.windows = this.windows.filter(this.removeClosed);
+    this.pendingSync = this.windows.map(this.queueSync);
     return true;
   },
 
@@ -232,8 +234,10 @@ Class.extend(Observations, {
       this.afterSync(callback);
     }
 
-    cancelAnimationFrame(this.pendingSync);
-    this.pendingSync = null;
+    if (this.pendingSync) {
+      this.pendingSync.forEach(this.cancelQueue);
+      this.pendingSync = null;
+    }
 
     if (this.syncing) {
       this.rerun = true;
@@ -339,5 +343,20 @@ Class.extend(Observations, {
     } else {
       return false;
     }
+  },
+
+  removeClosed: function(win) {
+    return !win.closed;
+  },
+
+  queueSync: function(win) {
+    var reqId = win.requestAnimationFrame(this.syncNow);
+    return [win, reqId];
+  },
+
+  cancelQueue: function(queue) {
+    var win = queue[0];
+    var reqId = queue[1];
+    win.cancelAnimationFrame(reqId);
   },
 });
