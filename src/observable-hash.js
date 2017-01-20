@@ -42,10 +42,10 @@ Class.extend(ObservableHash, {
    */
   observersStart: function() {
     this._observers.enabled = true;
-    this._observers.forEach(this.observersStartBindHelper.bind(this), this);
+    this._observers.forEach(this.observersStartBindHelper.bind(this));
 
     // Set namespaced hashes to the same value
-    this._namespaces.forEach(this.observersStartResumeHelper.bind(this), this);
+    this._namespaces.forEach(this.observersStartResumeHelper.bind(this));
   },
 
   observersStartBindHelper: function(observer) {
