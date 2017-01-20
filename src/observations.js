@@ -106,64 +106,66 @@ Class.extend(Observations, {
     if (!onAdd) onAdd = function(){};
     if (!onRemove) onRemove = function(){};
 
-    var observer = this.createObserver(expression, function(source, oldValue, changes) {
-      if (changes) {
-        // call onRemoved on everything first
-        changes.forEach(function(change) {
-          if (change.type === 'splice') {
-            change.removed.forEach(function(item, index) {
-              // Only call onRemove if this item was removed completely, not if it just changed location in the array
-              if (source.indexOf(item) === -1) {
-                onRemove.call(callbackContext, item, index + change.index);
-              }
-            }, callbackContext);
-          } else {
-            if (change.oldValue != null) {
-              onRemove.call(callbackContext, change.oldValue, change.name);
-            }
-          }
-        });
-
-        // call onAdded second, allowing for items that changed location to be accurately processed
-        changes.forEach(function(change) {
-          if (change.type === 'splice') {
-            source.slice(change.index, change.index + change.addedCount).forEach(function(item, index) {
-              // Only call onAdd if this item was added, not if it changed location in the array
-              if (oldValue.indexOf(item) === -1) {
-                onAdd.call(callbackContext, item, index + change.index, source);
-              }
-            }, callbackContext);
-          } else {
-            var value = source[change.name];
-            if (value != null) {
-              onAdd.call(callbackContext, value, change.name, source);
-            }
-          }
-        });
-      } else if (Array.isArray(source)) {
-        source.forEach(onAdd, callbackContext);
-      } else if (source && typeof source === 'object') {
-        Object.keys(source).forEach(function(key) {
-          var value = source[key];
-          if (value != null) {
-            onAdd.call(callbackContext, value, key, source);
-          }
-        });
-      } else if (Array.isArray(oldValue)) {
-        oldValue.forEach(onRemove, callbackContext);
-      } else if (oldValue && typeof oldValue === 'object') {
-        // If undefined (or something that isn't an array/object) remove the observers
-        Object.keys(oldValue).forEach(function(key) {
-          var value = oldValue[key];
-          if (value != null) {
-            onRemove.call(callbackContext, value, key, oldValue);
-          }
-        });
-      }
-    });
+    var observer = this.createObserver(expression, this.createMemberObserverCallback.bind(this, onAdd, onRemove, callbackContext));
 
     observer.getChangeRecords = true;
     return observer;
+  },
+
+  createMemberObserverCallback: function(onAdd, onRemove, callbackContext, source, oldValue, changes) {
+    if (changes) {
+      // call onRemoved on everything first
+      changes.forEach(function(change) {
+        if (change.type === 'splice') {
+          change.removed.forEach(function(item, index) {
+            // Only call onRemove if this item was removed completely, not if it just changed location in the array
+            if (source.indexOf(item) === -1) {
+              onRemove.call(callbackContext, item, index + change.index);
+            }
+          }, callbackContext);
+        } else {
+          if (change.oldValue != null) {
+            onRemove.call(callbackContext, change.oldValue, change.name);
+          }
+        }
+      });
+
+      // call onAdded second, allowing for items that changed location to be accurately processed
+      changes.forEach(function(change) {
+        if (change.type === 'splice') {
+          source.slice(change.index, change.index + change.addedCount).forEach(function(item, index) {
+            // Only call onAdd if this item was added, not if it changed location in the array
+            if (oldValue.indexOf(item) === -1) {
+              onAdd.call(callbackContext, item, index + change.index, source);
+            }
+          }, callbackContext);
+        } else {
+          var value = source[change.name];
+          if (value != null) {
+            onAdd.call(callbackContext, value, change.name, source);
+          }
+        }
+      });
+    } else if (Array.isArray(source)) {
+      source.forEach(onAdd, callbackContext);
+    } else if (source && typeof source === 'object') {
+      Object.keys(source).forEach(function(key) {
+        var value = source[key];
+        if (value != null) {
+          onAdd.call(callbackContext, value, key, source);
+        }
+      });
+    } else if (Array.isArray(oldValue)) {
+      oldValue.forEach(onRemove, callbackContext);
+    } else if (oldValue && typeof oldValue === 'object') {
+      // If undefined (or something that isn't an array/object) remove the observers
+      Object.keys(oldValue).forEach(function(key) {
+        var value = oldValue[key];
+        if (value != null) {
+          onRemove.call(callbackContext, value, key, oldValue);
+        }
+      });
+    }
   },
 
 

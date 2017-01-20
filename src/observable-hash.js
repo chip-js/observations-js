@@ -42,14 +42,18 @@ Class.extend(ObservableHash, {
    */
   observersStart: function() {
     this._observers.enabled = true;
-    this._observers.forEach(function(observer) {
-      observer.bind(this._context);
-    }, this);
+    this._observers.forEach(this.observersStartBindHelper.bind(this), this);
 
     // Set namespaced hashes to the same value
-    this._namespaces.forEach(function(namespace) {
-      this[namespace].observersResume();
-    }, this);
+    this._namespaces.forEach(this.observersStartResumeHelper.bind(this), this);
+  },
+
+  observersStartBindHelper: function(observer) {
+    observer.bind(this._context);
+  },
+
+  observersStartResumeHelper: function(namespace) {
+    this[namespace].observersResume();
   },
 
   /**
@@ -58,15 +62,19 @@ Class.extend(ObservableHash, {
    */
   observersStop: function(clearValues) {
     this._observers.enabled = false;
-    this._observers.forEach(function(observer) {
-      observer.unbind();
-      if (clearValues) observer.sync();
-    });
+    this._observers.forEach(this.observersStopBindHelper.bind(this, clearValues));
 
     // Set namespaced hashes to the same value
-    this._namespaces.forEach(function(namespace) {
-      this[namespace].observersPause(clearValues);
-    }, this);
+    this._namespaces.forEach(this.observersStopPauseHelper.bind(this, clearValues), this);
+  },
+
+  observersStopBindHelper: function(clearValues, observer) {
+    observer.unbind();
+    if (clearValues) observer.sync();
+  },
+
+  observersStopPauseHelper: function(clearValues, namespace) {
+    this[namespace].observersPause(clearValues);
   },
 
   /**
