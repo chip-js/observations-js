@@ -42,17 +42,17 @@ Class.extend(ObservableHash, {
    */
   observersStart: function() {
     this._observers.enabled = true;
-    this._observers.forEach(this.observersStartBindHelper.bind(this), this);
+    this._observers.forEach(this.observersBindHelper.bind(this), this);
 
     // Set namespaced hashes to the same value
-    this._namespaces.forEach(this.observersStartResumeHelper.bind(this), this);
+    this._namespaces.forEach(this.observersStartHelper.bind(this), this);
   },
 
-  observersStartBindHelper: function(observer) {
+  observersBindHelper: function(observer) {
     observer.bind(this._context);
   },
 
-  observersStartResumeHelper: function(namespace) {
+  observersStartHelper: function(namespace) {
     this[namespace].observersStart();
   },
 
@@ -62,19 +62,19 @@ Class.extend(ObservableHash, {
    */
   observersStop: function(clearValues) {
     this._observers.enabled = false;
-    this._observers.forEach(this.observersStopBindHelper.bind(this, clearValues));
+    this._observers.forEach(this.observersUnbindHelper.bind(this, clearValues));
 
     // Set namespaced hashes to the same value
-    this._namespaces.forEach(this.observersStopPauseHelper.bind(this, clearValues), this);
+    this._namespaces.forEach(this.observersStopHelper.bind(this, clearValues), this);
   },
 
-  observersStopBindHelper: function(clearValues, observer) {
+  observersUnbindHelper: function(clearValues, observer) {
     observer.unbind();
     if (clearValues) observer.sync();
   },
 
-  observersStopPauseHelper: function(clearValues, namespace) {
-    this[namespace].observersPause(clearValues);
+  observersStopHelper: function(clearValues, namespace) {
+    this[namespace].observersStop(clearValues);
   },
 
   /**
