@@ -53,7 +53,7 @@ Class.extend(ObservableHash, {
   },
 
   observersStartResumeHelper: function(namespace) {
-    this[namespace].observersResume();
+    this[namespace].observersStart();
   },
 
   /**
