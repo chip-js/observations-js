@@ -17,7 +17,8 @@ function Observations() {
   }, this);
   this.globals = {};
   this.formatters = {};
-  this.observers = [];
+  this.observersHead = null;
+  this.observersTail = null;
   this.callbacks = [];
   this.listeners = [];
   this.syncing = false;
@@ -266,8 +267,10 @@ Class.extend(Observations, {
       }
       this.rerun = false;
       // the observer array may increase or decrease in size (remaining observers) during the sync
-      for (i = 0; i < this.observers.length; i++) {
-        this.observers[i].sync();
+      var item = this.observersHead;
+      while (item) {
+        item.sync();
+        item = item.next;
       }
     }
 
@@ -328,7 +331,16 @@ Class.extend(Observations, {
   // Adds a new observer to be synced with changes. If `skipUpdate` is true then the callback will only be called when a
   // change is made, not initially.
   add: function(observer, skipUpdate) {
-    this.observers.push(observer);
+    if (observer.next || observer.prev) {
+      this.remove(observer);
+    }
+    if (this.observersTail) {
+      observer.prev = this.observersTail;
+      this.observersTail.next = observer;
+      this.observersTail = observer;
+    } else {
+      this.observersHead = this.observersTail = observer;
+    }
     if (!skipUpdate) {
       observer.forceUpdateNextSync = true;
       observer.sync();
@@ -338,13 +350,21 @@ Class.extend(Observations, {
 
   // Removes an observer, stopping it from being run
   remove: function(observer) {
-    var index = this.observers.indexOf(observer);
-    if (index !== -1) {
-      this.observers.splice(index, 1);
-      return true;
-    } else {
-      return false;
+    if (!observer.next && !observer.prev) {
+      return;
     }
+    if (!observer.prev) {
+      this.observersHead = observer.next;
+    } else {
+      observer.prev.next = observer.next;
+    }
+    if (!observer.next) {
+      this.observersTail = observer.prev;
+    } else {
+      observer.next.prev = observer.prev;
+    }
+    observer.prev = null;
+    observer.next = null;
   },
 
   removeClosed: function(win) {
