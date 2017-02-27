@@ -1,6 +1,6 @@
 {
   "name": "observations-js",
-  "version": "0.2.57",
+  "version": "0.2.58",
   "description": "Observes simplified JavaScript expressions and triggers callbacks when the returned value changes.",
   "keywords": [
     "templates",
@@ -25,7 +25,7 @@
     "test": "mocha test"
   },
   "dependencies": {
-    "chip-utils": "^0.2.2",
+    "chip-utils": "^0.3.0",
     "differences-js": "^0.1.0",
     "expressions-js": "^0.1.4"
   },
