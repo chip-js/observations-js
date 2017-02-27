@@ -28,6 +28,8 @@ function Observer(observations, expression, callback, callbackContext) {
   this.forceUpdateNextSync = false;
   this.context = null;
   this.oldValue = undefined;
+  this.prev = null;
+  this.next = null;
 }
 
 Class.extend(Observer, {
