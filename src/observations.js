@@ -1,5 +1,6 @@
 module.exports = Observations;
 var Class = require('chip-utils/class');
+var LinkedList = require('chip-utils/linked-list');
 var Observer = require('./observer');
 var computed = require('./computed');
 var ObservableHash = require('./observable-hash');
@@ -17,8 +18,7 @@ function Observations() {
   }, this);
   this.globals = {};
   this.formatters = {};
-  this.observersHead = null;
-  this.observersTail = null;
+  this.observers = new LinkedList();
   this.callbacks = [];
   this.listeners = [];
   this.syncing = false;
@@ -267,11 +267,7 @@ Class.extend(Observations, {
       }
       this.rerun = false;
       // the observer array may increase or decrease in size (remaining observers) during the sync
-      var item = this.observersHead;
-      while (item) {
-        item.sync();
-        item = item.next;
-      }
+      this.observers.forEach(syncObserver);
     }
 
     this.callbacksRunning = true;
@@ -331,16 +327,7 @@ Class.extend(Observations, {
   // Adds a new observer to be synced with changes. If `skipUpdate` is true then the callback will only be called when a
   // change is made, not initially.
   add: function(observer, skipUpdate) {
-    if (observer.next || observer.prev) {
-      this.remove(observer);
-    }
-    if (this.observersTail) {
-      observer.prev = this.observersTail;
-      this.observersTail.next = observer;
-      this.observersTail = observer;
-    } else {
-      this.observersHead = this.observersTail = observer;
-    }
+    this.observers.add(observer);
     if (!skipUpdate) {
       observer.forceUpdateNextSync = true;
       observer.sync();
@@ -350,21 +337,7 @@ Class.extend(Observations, {
 
   // Removes an observer, stopping it from being run
   remove: function(observer) {
-    if (!observer.next && !observer.prev) {
-      return;
-    }
-    if (!observer.prev) {
-      this.observersHead = observer.next;
-    } else {
-      observer.prev.next = observer.next;
-    }
-    if (!observer.next) {
-      this.observersTail = observer.prev;
-    } else {
-      observer.next.prev = observer.prev;
-    }
-    observer.prev = null;
-    observer.next = null;
+    this.observers.remove();
   },
 
   removeClosed: function(win) {
@@ -382,3 +355,7 @@ Class.extend(Observations, {
     win.cancelAnimationFrame(reqId);
   },
 });
+
+function syncObserver(observer) {
+  observer.sync();
+}

@@ -1,5 +1,6 @@
 module.exports = Observer;
 var Class = require('chip-utils/class');
+var LinkedList = require('chip-utils/linked-list');
 var expressions = require('expressions-js');
 var diff = require('differences-js');
 
@@ -28,8 +29,7 @@ function Observer(observations, expression, callback, callbackContext) {
   this.forceUpdateNextSync = false;
   this.context = null;
   this.oldValue = undefined;
-  this.prev = null;
-  this.next = null;
+  LinkedList.makeNode(this);
 }
 
 Class.extend(Observer, {
