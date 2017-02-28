@@ -337,7 +337,7 @@ Class.extend(Observations, {
 
   // Removes an observer, stopping it from being run
   remove: function(observer) {
-    this.observers.remove();
+    this.observers.remove(observer);
   },
 
   removeClosed: function(win) {
