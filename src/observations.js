@@ -5,8 +5,30 @@ var Observer = require('./observer');
 var computed = require('./computed');
 var ObservableHash = require('./observable-hash');
 var expressions = require('expressions-js');
-var requestAnimationFrame = global.requestAnimationFrame || setTimeout;
-var cancelAnimationFrame = global.cancelAnimationFrame || clearTimeout;
+
+var queue = setTimeout;
+var cancelQueue = clearTimeout;
+
+if (global.Promise) {
+  var currentQueueId = 1;
+  var queued = {};
+
+  queue = function(listener) {
+    var reqId = currentQueueId++;
+    queued[reqId] = true;
+    Promise.resolve().then(function() {
+      if (queued[reqId]) {
+        delete queued[reqId];
+        listener();
+      }
+    });
+    return reqId;
+  };
+
+  cancelQueue = function(reqId) {
+    delete queued[reqId];
+  };
+}
 
 
 function Observations() {
@@ -30,7 +52,6 @@ function Observations() {
   this.pendingSync = null;
   this.computed = computed.create(this);
   this.expressions = expressions;
-  this.windows = [ window ];
 }
 
 
@@ -225,8 +246,7 @@ Class.extend(Observations, {
       return false;
     }
 
-    this.windows = this.windows.filter(this.removeClosed);
-    this.pendingSync = this.windows.map(this.queueSync);
+    this.pendingSync = queue(this.syncNow);
     return true;
   },
 
@@ -237,10 +257,8 @@ Class.extend(Observations, {
       this.afterSync(callback);
     }
 
-    if (this.pendingSync) {
-      this.pendingSync.forEach(this.cancelQueue);
-      this.pendingSync = null;
-    }
+    cancelQueue(this.pendingSync);
+    this.pendingSync = null;
 
     if (this.syncing) {
       this.rerun = true;
@@ -340,20 +358,6 @@ Class.extend(Observations, {
     this.observers.remove(observer);
   },
 
-  removeClosed: function(win) {
-    return !win.closed;
-  },
-
-  queueSync: function(win) {
-    var reqId = win.requestAnimationFrame(this.syncNow);
-    return [win, reqId];
-  },
-
-  cancelQueue: function(queue) {
-    var win = queue[0];
-    var reqId = queue[1];
-    win.cancelAnimationFrame(reqId);
-  },
 });
 
 function syncObserver(observer) {
