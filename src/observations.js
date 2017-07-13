@@ -223,7 +223,7 @@ Class.extend(Observations, {
       return false;
     }
 
-    var fallback = setTimeout(this.syncNow, 50);
+    var fallback = setTimeout(this.syncNow, 500);
     this.windows = this.windows.filter(this.removeClosed);
     this.pendingSync = this.windows.map(this.queueSync).concat(fallback);
     return true;
