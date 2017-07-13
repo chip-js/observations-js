@@ -5,8 +5,6 @@ var Observer = require('./observer');
 var computed = require('./computed');
 var ObservableHash = require('./observable-hash');
 var expressions = require('expressions-js');
-var requestAnimationFrame = global.requestAnimationFrame || setTimeout;
-var cancelAnimationFrame = global.cancelAnimationFrame || clearTimeout;
 
 
 function Observations() {
@@ -225,8 +223,9 @@ Class.extend(Observations, {
       return false;
     }
 
+    var fallback = setTimeout(this.syncNow, 50);
     this.windows = this.windows.filter(this.removeClosed);
-    this.pendingSync = this.windows.map(this.queueSync);
+    this.pendingSync = this.windows.map(this.queueSync).concat(fallback);
     return true;
   },
 
@@ -238,6 +237,7 @@ Class.extend(Observations, {
     }
 
     if (this.pendingSync) {
+      clearTimeout(this.pendingSync.pop());
       this.pendingSync.forEach(this.cancelQueue);
       this.pendingSync = null;
     }
